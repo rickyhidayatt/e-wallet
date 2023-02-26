@@ -6,6 +6,7 @@ import (
 	"fmt"
 )
 
+// BUG Masih Ada
 type TransactionUseCase interface {
 	AddWallet(userId string, addBalance int) (int, error)
 }
