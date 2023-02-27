@@ -28,7 +28,7 @@ func (u *userUseCase) CreateNewUser(newUser *model.User) error {
 
 func (u *userUseCase) UpdateUser(user model.User) error {
 	if len(user.Name) < 3 || len(user.Name) > 20 {
-		return errors.New("Nama Minimal 3 Sampai 20 karakter")
+		return errors.New("nama Minimal 3 Sampai 20 karakter")
 	}
 	return nil
 }
