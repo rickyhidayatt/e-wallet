@@ -3,7 +3,6 @@ package main
 import (
 	"e-wallet/config"
 	"e-wallet/repository"
-	"e-wallet/usecase"
 	"fmt"
 )
 
@@ -11,8 +10,8 @@ func main() {
 	config := config.NewConfig()
 	db := config.DbConnect()
 
-	userRepo := repository.NewUserRepository(db)
-	balanceRepo := repository.NewBalanceRepository(db)
+	// userRepo := repository.NewUserRepository(db)
+	// balanceRepo := repository.NewBalanceRepository(db)
 
 	// test := model.Balances{
 	// 	UserId:  "92-363-9555",
@@ -22,19 +21,21 @@ func main() {
 
 	// // fmt.Println(userRepo.GetUserById("53-331-6070"))
 	txRepo := repository.NewTransactionRepository(db)
-	txUsecase := usecase.NewTransactionUseCase(txRepo, userRepo, balanceRepo)
+	// txUsecase := usecase.NewTransactionUseCase(txRepo, userRepo, balanceRepo)
 
-	userId := "43321"
-	addBalance := 32900
+	fmt.Println(txRepo.PrintHistoryTransactions("2321"))
 
-	saldo, err := txUsecase.TopUp(userId, addBalance)
-	// SendMoney(userId, addBalance, "test aja", "menabung", "80280239298", "diki")
+	// userId := "2321"
+	// addBalance := 10000
 
-	if err != nil {
-		fmt.Println("Gagal")
-	} else {
-		fmt.Println("berhasil, saldo kamu :", saldo)
-	}
+	// saldo, err := txUsecase.TopUp(userId, addBalance)
+	// // SendMoney(userId, addBalance, "test aja", "menabung", "80280239298", "diki")
+
+	// if err != nil {
+	// 	fmt.Println("Gagal")
+	// } else {
+	// 	fmt.Println("berhasil, saldo kamu :", saldo)
+	// }
 
 	//save transaksi
 	//=====================
@@ -45,10 +46,10 @@ func main() {
 	// 	TransactionType: "Test transaksi tipe",
 	// 	Amount:          addBalance,
 	// 	ReciverId:       "b86b9f9bed9e4504a65295f93e9eb23c",
-	// 	CategoryId:      "CategoryId1",
+	// 	Category:        "CategoryId1",
 	// }
 
-	// err := txRepo.SaveTransaction(&saveTransaction)
+	// err := txUsecase.SendMoney(userId, addBalance, "BCA", "Jajan Pizza Online 2", "2090990909", "reza")
 	// if err != nil {
 	// 	fmt.Println("gagal transaction")
 	// } else {
