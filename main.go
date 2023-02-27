@@ -12,20 +12,28 @@ func main() {
 	db := config.DbConnect()
 
 	userRepo := repository.NewUserRepository(db)
+	balanceRepo := repository.NewBalanceRepository(db)
 
-	// fmt.Println(userRepo.GetUserById("53-331-6070"))
+	// test := model.Balances{
+	// 	UserId:  "92-363-9555",
+	// 	Balance: 250000,
+	// }
+	// balanceRepo.SaveBalance(test)
+
+	// // fmt.Println(userRepo.GetUserById("53-331-6070"))
 	txRepo := repository.NewTransactionRepository(db)
-	txUsecase := usecase.NewTransactionUseCase(txRepo, userRepo)
+	txUsecase := usecase.NewTransactionUseCase(txRepo, userRepo, balanceRepo)
 
-	userId := "53-331-6070"
-	addBalance := 10000
+	userId := "43321"
+	addBalance := 32900
 
-	err := txUsecase.SendMoney(userId, addBalance, "test aja", "menabung", "80280239298", "diki")
+	saldo, err := txUsecase.TopUp(userId, addBalance)
+	// SendMoney(userId, addBalance, "test aja", "menabung", "80280239298", "diki")
 
 	if err != nil {
 		fmt.Println("Gagal")
 	} else {
-		fmt.Println("berhasil")
+		fmt.Println("berhasil, saldo kamu :", saldo)
 	}
 
 	//save transaksi
