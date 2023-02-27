@@ -4,6 +4,7 @@ import (
 	"e-wallet/model"
 	"e-wallet/utils"
 	"fmt"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -12,6 +13,8 @@ type TransactionRepository interface {
 	AddBalance(userId string, amount int) error
 	GetBalance(userId string) ([]int, error)
 	SendBalance(userId string, amount int) error
+	SaveTransaction(trx *model.Transaction) error
+	SaveReceiver(trx *model.Receiver) error
 }
 
 type transactionRepository struct {
@@ -24,7 +27,7 @@ func (r *transactionRepository) AddBalance(userId string, amount int) error {
 	//rolback jika ada kesalahan
 	err = r.runTransaction(func(tx *sqlx.Tx) error {
 		if err = r.checkUserExists(tx, userId); err != nil {
-			return fmt.Errorf("failed to add balance: %v", err)
+			return err
 		}
 
 		balance := model.Balances{
@@ -33,7 +36,7 @@ func (r *transactionRepository) AddBalance(userId string, amount int) error {
 		}
 
 		if _, err = tx.NamedExec(utils.ADD_BALANCE, &balance); err != nil {
-			return fmt.Errorf("failed to add balance: %v", err)
+			return err
 		}
 
 		return nil
@@ -48,7 +51,7 @@ func (r *transactionRepository) SendBalance(userId string, amount int) error {
 	//rolback jika ada kesalahan
 	err = r.runTransaction(func(tx *sqlx.Tx) error {
 		if err = r.checkUserExists(tx, userId); err != nil {
-			return fmt.Errorf("failed to send balance: %v", err)
+			return err
 		}
 
 		balance := model.Balances{
@@ -57,7 +60,7 @@ func (r *transactionRepository) SendBalance(userId string, amount int) error {
 		}
 
 		if _, err = tx.NamedExec(utils.SEND_BALANCE, &balance); err != nil {
-			return fmt.Errorf("failed to send balance: %v", err)
+			return err
 		}
 
 		return nil
@@ -81,6 +84,27 @@ func (r *transactionRepository) GetBalance(userId string) ([]int, error) {
 	}
 
 	return balanceInt, nil
+}
+
+// fitur transaksi records
+func (tx *transactionRepository) SaveTransaction(trx *model.Transaction) error {
+	_, err := tx.db.NamedExec(utils.INSERT_TRANSACTION, &trx)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return nil
+}
+
+func (tx *transactionRepository) SaveReceiver(trx *model.Receiver) error {
+	_, err := tx.db.NamedExec(utils.INSERT_RECEIVER, &trx)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return nil
 }
 
 func (r *transactionRepository) checkUserExists(tx *sqlx.Tx, userId string) error {

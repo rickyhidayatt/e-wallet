@@ -8,6 +8,12 @@ const (
 	SEND_BALANCE        = "UPDATE balances SET balance = balance - :balance WHERE user_id = :user_id"
 	CHECK_BALANCE_BY_ID = "SELECT * FROM balances WHERE user_id = $1"
 
+	INSERT_TRANSACTION = `
+	INSERT INTO transactions (id, user_id, transaction_type, amount, receiver_id, category_id, transaction_date) 
+	VALUES (:id, :user_id, :transaction_type, :amount, :receiver_id, :category_id, :transaction_date)
+`
+	INSERT_RECEIVER = "INSERT INTO receivers (id, user_id, name, bank_name, account_number) VALUES (:id, :user_id, :name, :bank_name, :account_number)"
+
 	//USERS
 	USER_BY_ID       = "SELECT * FROM users WHERE id=$1"
 	SELECT_ALL_USER  = "SELECT * FROM users"
