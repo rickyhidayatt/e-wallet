@@ -24,9 +24,9 @@ type transactionUseCase struct {
 
 func (tx *transactionUseCase) TopUp(userId string, addBalance int) (int, error) {
 
-	checkId, err := tx.userRepo.GetUserById(userId)
+	checkId, err := tx.userRepo.ViewById(userId)
 
-	if checkId == nil {
+	if checkId.Id == userId {
 		fmt.Println("error id gak ada")
 		return 0, err
 	}
@@ -63,8 +63,8 @@ func (tx *transactionUseCase) TopUp(userId string, addBalance int) (int, error) 
 }
 
 func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) error {
-	user, err := tx.userRepo.GetUserById(userId)
-	if user == nil {
+	user, err := tx.userRepo.ViewById(userId)
+	if user.Id == userId {
 		log.Fatal("failed to get user by id", err)
 		return err
 	}

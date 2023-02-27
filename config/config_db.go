@@ -39,7 +39,7 @@ func (c *Config) initDb() {
 		fmt.Println(err.Error())
 	}
 
-	fmt.Println("Berhasil konnek")
+	fmt.Println("Connection success")
 
 	c.Db = db
 

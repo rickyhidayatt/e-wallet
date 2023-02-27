@@ -8,20 +8,28 @@ import (
 )
 
 type UserRepository interface {
-	GetUserById(id string) ([]model.User, error)
+	ViewById(id string) (model.User, error)
 	ViewAll(page int, totalRows int) ([]model.User, error)
 	CreateNew(newUser *model.User) error
 	Update(user model.User) error
+	DeleteById(id string) error
 }
 type userRepository struct {
 	db *sqlx.DB
 }
 
-func (r *userRepository) GetUserById(id string) ([]model.User, error) {
-	var user []model.User
-	err := r.db.Select(&user, utils.USER_BY_ID, id)
+func (r *userRepository) ViewById(id string) (model.User, error) {
+	var user model.User
+	err := r.db.QueryRow(utils.SELECT_USER_BYID, id).Scan(
+		&user.Name,
+		&user.Email,
+		&user.PhoneNumber,
+		&user.Password,
+		&user.Address,
+		&user.BirthDate,
+	)
 	if err != nil {
-		return nil, err
+		return model.User{}, err
 	}
 	return user, nil
 }
@@ -47,6 +55,14 @@ func (u *userRepository) CreateNew(newUser *model.User) error {
 
 func (u *userRepository) Update(user model.User) error {
 	_, err := u.db.NamedExec(utils.UPDATE_USER_BYID, user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userRepository) DeleteById(id string) error {
+	_,err := u.db.Exec(utils.DELETE_USER_BYID, id)
 	if err != nil {
 		return err
 	}

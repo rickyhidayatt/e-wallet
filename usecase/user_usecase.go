@@ -8,13 +8,19 @@ import (
 )
 
 type UserUseCase interface {
+	ViewUserById(id string) (model.User, error)
 	ViewAllUser(page int, totalRows int) ([]model.User, error)
 	CreateNewUser(newUser *model.User) error
 	UpdateUser(user model.User) error
+	DeleteUserById(id string) error
 }
 
 type userUseCase struct {
 	userRepo repository.UserRepository
+}
+
+func (u *userUseCase) ViewUserById(id string) (model.User, error) {
+	return u.userRepo.ViewById(id)
 }
 
 func (u *userUseCase) ViewAllUser(page int, totalRows int) ([]model.User, error) {
@@ -31,6 +37,10 @@ func (u *userUseCase) UpdateUser(user model.User) error {
 		return errors.New("nama Minimal 3 Sampai 20 karakter")
 	}
 	return nil
+}
+
+func (u *userUseCase) DeleteUserById(id string) error {
+	return u.userRepo.DeleteById(id)
 }
 
 func NewUserUseCase(userRepository repository.UserRepository) UserUseCase {
