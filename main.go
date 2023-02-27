@@ -3,6 +3,7 @@ package main
 import (
 	"e-wallet/config"
 	"e-wallet/repository"
+	"e-wallet/usecase"
 	"fmt"
 )
 
@@ -12,16 +13,21 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 
-	fmt.Println(userRepo.GetUserById("53-331-6070"))
-	// txUsecase := usecase.NewTransactionUseCase(txRepo, userRepo)
-
+	// fmt.Println(userRepo.GetUserById("53-331-6070"))
 	txRepo := repository.NewTransactionRepository(db)
-	userId := "53-331-6070"
-	addBalance := 30000
+	txUsecase := usecase.NewTransactionUseCase(txRepo, userRepo)
 
-	err := txRepo.AddBalance(userId, addBalance)
+	userId := "53-331-6070"
+	addBalance := 10000
+
+	// err := txRepo.AddBalance(userId, addBalance)
+	// if err != nil {
+	// 	fmt.Println("gagal")
+	// }
+
+	nilai, err := txUsecase.AddWallet(userId, addBalance)
 	if err != nil {
 		fmt.Println("gagal")
 	}
-	fmt.Println("berhasil")
+	fmt.Println("berhasil", nilai)
 }

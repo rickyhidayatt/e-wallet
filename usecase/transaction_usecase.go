@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"e-wallet/model"
 	"e-wallet/repository"
 	"fmt"
 )
@@ -20,19 +19,19 @@ func (tx *transactionUseCase) AddWallet(userId string, addBalance int) (int, err
 
 	checkId, err := tx.userRepo.GetUserById(userId)
 
-	fmt.Println(checkId)
-
 	if checkId == nil {
-		fmt.Println("error gak")
+		fmt.Println("error id gak ada")
 		return 0, err
 	}
+	fmt.Println("di Usecase", checkId)
 
-	if addBalance > 10000 {
+	if addBalance < 10000 {
+		fmt.Println("gagal balance")
 		return 0, fmt.Errorf("addBalance amount (%d) exceeds maximum limit of 10000", addBalance)
 	}
 
-	var balance model.Balances
-	fmt.Println("Jumlahnya :", balance.Balance)
+	// var balance model.Balances
+	// fmt.Println("Jumlahnya :", balance.Balance)
 
 	err = tx.transactionRepo.AddBalance(userId, addBalance)
 	if err != nil {
