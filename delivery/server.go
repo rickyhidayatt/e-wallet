@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"e-wallet/config"
+	"e-wallet/delivery/controller"
 	"e-wallet/manager"
 
 	"github.com/gin-gonic/gin"
@@ -26,11 +27,12 @@ func Server() *appServer {
 
 func (a *appServer) initHandlers() {
 	//masukan yang mau di jalankan handlernya dari package controller
+	controller.NewTransactionController(a.engine, a.useCaseManager.TransactionUseCase())
 }
 
 func (a *appServer) Run() {
 	a.initHandlers()
-	err := a.engine.Run()
+	err := a.engine.Run(":8082")
 	if err != nil {
 		panic(err.Error())
 	}

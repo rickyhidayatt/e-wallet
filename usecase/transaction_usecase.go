@@ -12,7 +12,7 @@ import (
 
 type TransactionUseCase interface {
 	TopUp(userId string, addBalance int) (int, error)
-	SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) error
+	SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) (*model.Transfer, error)
 	PrintHistoryTransactionsById(userId string) (error, []model.TransactionReceiver)
 	RequestMoney(userId string, amount int, bankName string, accountNumber string, category string, receiverId string) error
 }
@@ -60,15 +60,14 @@ func (tx *transactionUseCase) RequestMoney(userId string, amount int, bankName s
 func (tx *transactionUseCase) TopUp(userId string, addBalance int) (int, error) {
 
 	checkId, err := tx.userRepo.GetUserById(userId)
-
 	if checkId == nil {
-		fmt.Println("error id gak ada")
-		return 0, err
+
+		return 0, errors.New("id not found")
 	}
 
 	if addBalance < 10000 {
-		fmt.Println("gagal balance")
-		return 0, errors.New("specify a Rp.10,000 minimum balance")
+
+		return 0, errors.New("the minimum amount for top up is Rp10.000")
 	}
 
 	id, err := tx.balanceRepo.GetBalance(userId)
@@ -97,28 +96,25 @@ func (tx *transactionUseCase) TopUp(userId string, addBalance int) (int, error) 
 	return addBalance, nil
 }
 
-func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) error {
+func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) (*model.Transfer, error) {
+
 	user, err := tx.userRepo.GetUserById(userId)
 	if user == nil {
-		log.Fatal("failed to get user by id", err)
-		return err
+		return nil, errors.New("failed to get user by id")
 	}
 
 	if amount < 5000 {
-		log.Fatal("The minimum amount is 5.000")
-		return err
+		return nil, errors.New("the minimum amount is Rp5.000")
 	}
 
 	balances, err := tx.balanceRepo.GetBalance(userId)
 	if err != nil {
-		log.Fatal("failed to get user balances", err)
-		return err
+		return nil, errors.New("failed to get user balances")
 	}
 
 	for _, balance := range balances {
 		if balance < amount {
-			log.Fatal(" There are insufficient funds on your account; ")
-			return err
+			return nil, errors.New("there are insufficient funds on your account")
 		}
 	}
 
@@ -132,7 +128,7 @@ func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName stri
 
 	err = tx.transactionRepo.SaveReceiver(&receiver)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	transaction := model.Transaction{
@@ -148,17 +144,24 @@ func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName stri
 
 	if err != nil {
 		log.Fatal("failed to save transaction", err)
-		return err
+		return nil, err
 	}
 
 	err = tx.balanceRepo.SendBalance(userId, amount)
 
 	if err != nil {
 		log.Fatal("failed to send balance", err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &model.Transfer{
+		UserId:        userId,
+		Amount:        amount,
+		BankName:      bankName,
+		Category:      category,
+		AccountNumber: accountNumber,
+		ReceiverName:  receiverName,
+	}, nil
 }
 
 func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) (error, []model.TransactionReceiver) {
