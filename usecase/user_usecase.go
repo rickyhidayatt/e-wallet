@@ -11,6 +11,7 @@ type UserUseCase interface {
 	ViewAllUser(page int, totalRows int) ([]model.User, error)
 	CreateNewUser(newUser *model.User) error
 	UpdateUser(user model.User) error
+	DeleteUserById(id string) error
 }
 
 type userUseCase struct {
@@ -31,6 +32,10 @@ func (u *userUseCase) UpdateUser(user model.User) error {
 		return errors.New("nama Minimal 3 Sampai 20 karakter")
 	}
 	return nil
+}
+
+func (u *userUseCase) DeleteUserById(id string) error {
+	return u.userRepo.DeleteById(id)
 }
 
 func NewUserUseCase(userRepository repository.UserRepository) UserUseCase {
