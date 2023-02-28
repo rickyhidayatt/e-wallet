@@ -3,7 +3,6 @@ package repository
 import (
 	"e-wallet/model"
 	"e-wallet/utils"
-	"fmt"
 	"log"
 
 	"github.com/jmoiron/sqlx"
@@ -12,7 +11,7 @@ import (
 type TransactionRepository interface {
 	SaveTransaction(trx *model.Transaction) error
 	SaveReceiver(trx *model.Receiver) error
-	PrintHistoryTransactions(userId string) error
+	PrintHistoryTransactions(userId string) ([]model.TransactionReceiver, error)
 }
 
 type transactionRepository struct {
@@ -20,13 +19,16 @@ type transactionRepository struct {
 }
 
 // BUG nilai belum ke ambil
-func (tx *transactionRepository) PrintHistoryTransactions(userId string) error {
-	nilai, err := tx.db.Exec(utils.CHECK_HISTORY_TRANSAKSI, userId)
+func (tx *transactionRepository) PrintHistoryTransactions(userId string) ([]model.TransactionReceiver, error) {
+
+	var transactions []model.TransactionReceiver
+
+	err := tx.db.Select(&transactions, utils.CHECK_HISTORY_TRANSAKSI, userId)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(nilai)
-	return nil
+
+	return transactions, nil
 }
 
 func (tx *transactionRepository) SaveTransaction(trx *model.Transaction) error {

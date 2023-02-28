@@ -22,9 +22,7 @@ const (
 
 	//
 	CHECK_HISTORY_TRANSAKSI = `
-	SELECT t.id, t.user_id, t.transaction_type, t.amount, t.category, t.transaction_date, r.name, r.bank_name, r.account_number, r.id
-	FROM transactions AS t
-	JOIN receivers AS r ON t.user_id = r.user_id
-	WHERE t.user_id = $1
+	SELECT transactions.id, transactions.user_id, transactions.transaction_type, transactions.amount, transactions.category, transactions.transaction_date, receivers.name, receivers.bank_name, receivers.account_number, receivers.id as receiver_id
+	FROM transactions JOIN receivers ON transactions.receiver_id = receivers.id WHERE transactions.user_id = $1
 	`
 )
