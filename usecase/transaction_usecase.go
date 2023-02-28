@@ -10,17 +10,51 @@ import (
 	"time"
 )
 
-// BUG Masih Ada
 type TransactionUseCase interface {
 	TopUp(userId string, addBalance int) (int, error)
 	SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) error
 	PrintHistoryTransactionsById(userId string) (error, []model.TransactionReceiver)
+	RequestMoney(userId string, amount int, bankName string, accountNumber string, category string, receiverId string) error
 }
 
 type transactionUseCase struct {
 	transactionRepo repository.TransactionRepository
 	userRepo        repository.UserRepository
 	balanceRepo     repository.BalanceRepository
+	receiverRepo    repository.ReceiverRepository
+}
+
+func (tx *transactionUseCase) RequestMoney(userId string, amount int, bankName string, accountNumber string, category string, receiverId string) error {
+	// cek receiverId ada atau tidak
+	_, err := tx.receiverRepo.GetReceiverById(receiverId)
+	if err != nil {
+		return errors.New("receiver account id not found")
+	}
+	// cek userId ada di db ada apa enggak
+	_, err = tx.userRepo.GetUserById(userId)
+	if err != nil {
+		return errors.New("user id, not found")
+	}
+
+	transactions := model.Transaction{
+		Id:              utils.GenerateId(),
+		UserId:          userId,
+		TransactionDate: time.Now(),
+		TransactionType: "Request Money",
+		Amount:          amount,
+		ReciverId:       receiverId,
+		Category:        category,
+	}
+
+	// simpan request transaksi
+	err = tx.transactionRepo.SaveTransaction(&transactions)
+	if err != nil {
+		return err
+	}
+	// Notifikasi on progress
+	fmt.Println("Your request has been sent successfully")
+
+	return nil
 }
 
 func (tx *transactionUseCase) TopUp(userId string, addBalance int) (int, error) {
@@ -128,9 +162,7 @@ func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName stri
 }
 
 func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) (error, []model.TransactionReceiver) {
-
 	var transactionsHistory []model.TransactionReceiver
-
 	trxHistory, err := tx.transactionRepo.PrintHistoryTransactions(userId)
 	if err != nil {
 		log.Fatal(err)
@@ -140,10 +172,11 @@ func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) (error
 	return nil, transactionsHistory
 }
 
-func NewTransactionUseCase(txRepoArg repository.TransactionRepository, userArg repository.UserRepository, balanceArg repository.BalanceRepository) TransactionUseCase {
+func NewTransactionUseCase(tx repository.TransactionRepository, usr repository.UserRepository, blc repository.BalanceRepository, rcv repository.ReceiverRepository) TransactionUseCase {
 	return &transactionUseCase{
-		transactionRepo: txRepoArg,
-		userRepo:        userArg,
-		balanceRepo:     balanceArg,
+		transactionRepo: tx,
+		userRepo:        usr,
+		balanceRepo:     blc,
+		receiverRepo:    rcv,
 	}
 }
