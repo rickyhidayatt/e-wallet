@@ -3,113 +3,51 @@ package repository
 import (
 	"e-wallet/model"
 	"e-wallet/utils"
-	"fmt"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type TransactionRepository interface {
-	AddBalance(userId string, amount int) error
-	GetBalance(userId string) ([]int, error)
-	SendBalance(userId string, amount int) error
+	SaveTransaction(trx *model.Transaction) error
+	SaveReceiver(trx *model.Receiver) error
+	PrintHistoryTransactions(userId string) ([]model.TransactionReceiver, error)
 }
 
 type transactionRepository struct {
 	db *sqlx.DB
 }
 
-func (r *transactionRepository) AddBalance(userId string, amount int) error {
-	var err error
+func (tx *transactionRepository) PrintHistoryTransactions(userId string) ([]model.TransactionReceiver, error) {
 
-	//rolback jika ada kesalahan
-	err = r.runTransaction(func(tx *sqlx.Tx) error {
-		if err = r.checkUserExists(tx, userId); err != nil {
-			return fmt.Errorf("failed to add balance: %v", err)
-		}
+	var transactions []model.TransactionReceiver
 
-		balance := model.Balances{
-			UserId:  userId,
-			Balance: amount,
-		}
-
-		if _, err = tx.NamedExec(utils.ADD_BALANCE, &balance); err != nil {
-			return fmt.Errorf("failed to add balance: %v", err)
-		}
-
-		return nil
-	})
-
-	return err
-}
-
-func (r *transactionRepository) SendBalance(userId string, amount int) error {
-	var err error
-
-	//rolback jika ada kesalahan
-	err = r.runTransaction(func(tx *sqlx.Tx) error {
-		if err = r.checkUserExists(tx, userId); err != nil {
-			return fmt.Errorf("failed to send balance: %v", err)
-		}
-
-		balance := model.Balances{
-			UserId:  userId,
-			Balance: amount,
-		}
-
-		if _, err = tx.NamedExec(utils.SEND_BALANCE, &balance); err != nil {
-			return fmt.Errorf("failed to send balance: %v", err)
-		}
-
-		return nil
-	})
-
-	return err
-}
-
-func (r *transactionRepository) GetBalance(userId string) ([]int, error) {
-	var balances []model.Balances
-	var balanceInt []int
-	var err error
-
-	err = r.db.Select(&balances, utils.CHECK_BALANCE_BY_ID, userId)
+	err := tx.db.Select(&transactions, utils.CHECK_HISTORY_TRANSAKSI, userId)
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 
-	for _, v := range balances {
-		balanceInt = append(balanceInt, v.Balance)
-	}
-
-	return balanceInt, nil
+	return transactions, nil
 }
 
-func (r *transactionRepository) checkUserExists(tx *sqlx.Tx, userId string) error {
-	var user []model.User
-	if err := tx.Select(&user, utils.USER_BY_ID, userId); err != nil {
+func (tx *transactionRepository) SaveTransaction(trx *model.Transaction) error {
+	_, err := tx.db.NamedExec(utils.INSERT_TRANSACTION, &trx)
+	if err != nil {
+		log.Fatal(err)
 		return err
-	}
-
-	if len(user) == 0 {
-		return fmt.Errorf("user %s not found", userId)
 	}
 
 	return nil
 }
 
-func (r *transactionRepository) runTransaction(f func(*sqlx.Tx) error) error {
-	tx, err := r.db.Beginx()
+func (tx *transactionRepository) SaveReceiver(trx *model.Receiver) error {
+	_, err := tx.db.NamedExec(utils.INSERT_RECEIVER, &trx)
 	if err != nil {
-		return fmt.Errorf("failed to start transaction: %v", err)
+		log.Fatal(err)
+		return err
 	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-		err = tx.Commit()
-	}()
 
-	return f(tx)
+	return nil
 }
 
 func NewTransactionRepository(dbArg *sqlx.DB) TransactionRepository {

@@ -11,7 +11,8 @@ type UserRepository interface {
 	GetUserById(id string) ([]model.User, error)
 	ViewAll(page int, totalRows int) ([]model.User, error)
 	CreateNew(newUser *model.User) error
-	Update(user model.User) error
+	Update(user *model.User) error
+	DeleteById(id string) error
 }
 type userRepository struct {
 	db *sqlx.DB
@@ -38,15 +39,23 @@ func (u *userRepository) ViewAll(page int, totalRows int) ([]model.User, error) 
 }
 
 func (u *userRepository) CreateNew(newUser *model.User) error {
-	_, err := u.db.Exec(utils.INSERT_NEW_USER, newUser.Name, newUser.Email, newUser.PhoneNumber, newUser.Password, newUser.Address, newUser.BirthDate)
+	_, err := u.db.NamedExec(utils.INSERT_NEW_USER, &newUser)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *userRepository) Update(user model.User) error {
-	_, err := u.db.NamedExec(utils.UPDATE_USER_BYID, user)
+func (u *userRepository) Update(user *model.User) error {
+	_, err := u.db.NamedExec(utils.UPDATE_USER_BYID, &user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userRepository) DeleteById(id string) error {
+	_, err := u.db.Exec(utils.DELETE_USER_BYID, id)
 	if err != nil {
 		return err
 	}
