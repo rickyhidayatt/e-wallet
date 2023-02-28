@@ -18,7 +18,6 @@ type transactionRepository struct {
 	db *sqlx.DB
 }
 
-// BUG nilai belum ke ambil
 func (tx *transactionRepository) PrintHistoryTransactions(userId string) ([]model.TransactionReceiver, error) {
 
 	var transactions []model.TransactionReceiver

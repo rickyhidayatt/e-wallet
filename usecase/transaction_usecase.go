@@ -14,6 +14,7 @@ import (
 type TransactionUseCase interface {
 	TopUp(userId string, addBalance int) (int, error)
 	SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) error
+	PrintHistoryTransactionsById(userId string) (error, []model.TransactionReceiver)
 }
 
 type transactionUseCase struct {
@@ -124,6 +125,19 @@ func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName stri
 	}
 
 	return nil
+}
+
+func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) (error, []model.TransactionReceiver) {
+
+	var transactionsHistory []model.TransactionReceiver
+
+	trxHistory, err := tx.transactionRepo.PrintHistoryTransactions(userId)
+	if err != nil {
+		log.Fatal(err)
+	}
+	transactionsHistory = append(transactionsHistory, trxHistory...)
+
+	return nil, transactionsHistory
 }
 
 func NewTransactionUseCase(txRepoArg repository.TransactionRepository, userArg repository.UserRepository, balanceArg repository.BalanceRepository) TransactionUseCase {

@@ -3,6 +3,7 @@ package main
 import (
 	"e-wallet/config"
 	"e-wallet/repository"
+	"e-wallet/usecase"
 	"fmt"
 )
 
@@ -10,8 +11,8 @@ func main() {
 	config := config.NewConfig()
 	db := config.DbConnect()
 
-	// userRepo := repository.NewUserRepository(db)
-	// balanceRepo := repository.NewBalanceRepository(db)
+	userRepo := repository.NewUserRepository(db)
+	balanceRepo := repository.NewBalanceRepository(db)
 
 	// test := model.Balances{
 	// 	UserId:  "92-363-9555",
@@ -21,9 +22,9 @@ func main() {
 
 	// // fmt.Println(userRepo.GetUserById("53-331-6070"))
 	txRepo := repository.NewTransactionRepository(db)
-	// txUsecase := usecase.NewTransactionUseCase(txRepo, userRepo, balanceRepo)
+	txUsecase := usecase.NewTransactionUseCase(txRepo, userRepo, balanceRepo)
 
-	fmt.Println(txRepo.PrintHistoryTransactions("2321"))
+	fmt.Println(txUsecase.PrintHistoryTransactionsById("2321"))
 
 	// userId := "2321"
 	// addBalance := 10000
