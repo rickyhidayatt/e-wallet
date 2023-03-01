@@ -3,7 +3,6 @@ package repository
 import (
 	"e-wallet/model"
 	"e-wallet/utils"
-	"log"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -24,7 +23,7 @@ func (tx *transactionRepository) PrintHistoryTransactions(userId string) ([]mode
 
 	err := tx.db.Select(&transactions, utils.CHECK_HISTORY_TRANSAKSI, userId)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	return transactions, nil
@@ -33,7 +32,6 @@ func (tx *transactionRepository) PrintHistoryTransactions(userId string) ([]mode
 func (tx *transactionRepository) SaveTransaction(trx *model.Transaction) error {
 	_, err := tx.db.NamedExec(utils.INSERT_TRANSACTION, &trx)
 	if err != nil {
-		log.Fatal(err)
 		return err
 	}
 
@@ -43,7 +41,6 @@ func (tx *transactionRepository) SaveTransaction(trx *model.Transaction) error {
 func (tx *transactionRepository) SaveReceiver(trx *model.Receiver) error {
 	_, err := tx.db.NamedExec(utils.INSERT_RECEIVER, &trx)
 	if err != nil {
-		log.Fatal(err)
 		return err
 	}
 

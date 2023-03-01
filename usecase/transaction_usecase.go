@@ -12,7 +12,7 @@ import (
 type TransactionUseCase interface {
 	TopUp(userId string, addBalance int) (int, error)
 	SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) (*model.Transfer, error)
-	PrintHistoryTransactionsById(userId string) (error, []model.TransactionReceiver)
+	PrintHistoryTransactionsById(userId string) ([]model.TransactionReceiver, error)
 	RequestMoney(userId string, amount int, bankName string, accountNumber string, category string, receiverId string) (model.Transaction, error)
 }
 
@@ -52,7 +52,6 @@ func (tx *transactionUseCase) RequestMoney(userId string, amount int, bankName s
 		Category:        category,
 	}
 
-	// simpan request transaksi
 	err = tx.transactionRepo.SaveTransaction(&transactions)
 	if err != nil {
 		return transaction, errors.New("failed save transaction")
@@ -168,15 +167,20 @@ func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName stri
 	}, nil
 }
 
-func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) (error, []model.TransactionReceiver) {
+func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) ([]model.TransactionReceiver, error) {
 	var transactionsHistory []model.TransactionReceiver
+	if userId == "" {
+		return nil, errors.New("fill in your user id")
+	}
 	trxHistory, err := tx.transactionRepo.PrintHistoryTransactions(userId)
 	if err != nil {
-		log.Fatal(err)
+		return nil, errors.New("id not found")
+	}
+	if len(trxHistory) == 0 {
+		return nil, errors.New("not found transaction data for user")
 	}
 	transactionsHistory = append(transactionsHistory, trxHistory...)
-
-	return nil, transactionsHistory
+	return transactionsHistory, nil
 }
 
 func NewTransactionUseCase(tx repository.TransactionRepository, usr repository.UserRepository, blc repository.BalanceRepository, rcv repository.ReceiverRepository) TransactionUseCase {

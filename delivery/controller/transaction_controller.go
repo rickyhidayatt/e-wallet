@@ -68,8 +68,17 @@ func (tc *TransactionController) RequestMoney(c *gin.Context) {
 	}
 }
 
-func (tc *TransactionController) PrintHistoryTransactions(c *gin.Context) {
+func (tc *TransactionController) PrintTransactionHistory(c *gin.Context) {
 	/// print history disini
+	id := c.Param("id")
+	transactions, err := tc.transactionUseCase.PrintHistoryTransactionsById(id)
+	if err != nil {
+		utils.HandleInternalServerError(c, err.Error())
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"transaction history": transactions,
+		})
+	}
 }
 
 func NewTransactionController(router *gin.Engine, transactionUc usecase.TransactionUseCase) *TransactionController {
@@ -81,6 +90,7 @@ func NewTransactionController(router *gin.Engine, transactionUc usecase.Transact
 	r.POST("/topup", trxController.TopUp)
 	r.POST("/transfer", trxController.Transfer)
 	r.POST("/request", trxController.RequestMoney)
+	r.GET("/:id/history", trxController.PrintTransactionHistory)
 
 	return &trxController
 }
