@@ -11,10 +11,23 @@ import (
 type TransactionRepository interface {
 	SaveTransaction(trx *model.Transaction) error
 	SaveReceiver(trx *model.Receiver) error
+	PrintHistoryTransactions(userId string) ([]model.TransactionReceiver, error)
 }
 
 type transactionRepository struct {
 	db *sqlx.DB
+}
+
+func (tx *transactionRepository) PrintHistoryTransactions(userId string) ([]model.TransactionReceiver, error) {
+
+	var transactions []model.TransactionReceiver
+
+	err := tx.db.Select(&transactions, utils.CHECK_HISTORY_TRANSAKSI, userId)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return transactions, nil
 }
 
 func (tx *transactionRepository) SaveTransaction(trx *model.Transaction) error {

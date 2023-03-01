@@ -9,5 +9,5 @@ type Transaction struct {
 	TransactionType string    `db:"transaction_type"`
 	Amount          int       `db:"amount"`
 	ReciverId       string    `db:"receiver_id"`
-	CategoryId      string    `db:"category_id"`
+	Category        string    `db:"category"`
 }
