@@ -83,6 +83,6 @@ func NewUserController(router *gin.Engine, userArg usecase.UserUseCase) *UserCon
 	r := router.Group("api/user")
 	r.POST("/login", userController.Login)
 	r.POST("/signup", userController.RegisterUser)
-	r.POST("/update", userController.UpdateUser)
+	r.PUT("/update", userController.UpdateUser)
 	return &userController
 }
