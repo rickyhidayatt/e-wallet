@@ -1,58 +1,39 @@
 package utils
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
-type ResponseWrapper struct {
-	Message      string
-	ResponseCode int
-	Result       interface{}
+func FormatValidatorError(err error) []string {
+	var errors []string
+
+	for _, e := range err.(validator.ValidationErrors) {
+		errors = append(errors, e.Error())
+	}
+	return errors
 }
 
-func HandleSuccess(c *gin.Context, data interface{}, message string) {
-	response := ResponseWrapper{
-		Message:      message,
-		ResponseCode: 200,
-		Result:       data,
-	}
-	c.JSON(http.StatusOK, response)
+type Response struct {
+	Meta Meta        `json:"meta"`
+	Data interface{} `json:"data"`
+}
+type Meta struct {
+	Message string `json:"message"`
+	Code    int    `json:"code"`
+	Status  string `json:"status"`
 }
 
-func HandleSuccessCreated(c *gin.Context, message string, data interface{}) {
-	response := ResponseWrapper{
-		Message:      message,
-		ResponseCode: 201,
-		Result:       data,
+func ApiResponse(message string, code int, status string, data interface{}) Response {
+	meta := Meta{
+		Message: message,
+		Code:    code,
+		Status:  status,
 	}
-	c.JSON(http.StatusCreated, response)
-}
 
-func HandleNotFound(c *gin.Context, message string) {
-	response := ResponseWrapper{
-		Message:      message,
-		ResponseCode: 404,
-		Result:       nil,
+	jsonResponse := Response{
+		Meta: meta,
+		Data: data,
 	}
-	c.JSON(http.StatusNotFound, response)
-}
 
-func HandleInternalServerError(c *gin.Context, message string) {
-	response := ResponseWrapper{
-		Message:      message,
-		ResponseCode: 500,
-		Result:       nil,
-	}
-	c.JSON(http.StatusInternalServerError, response)
-}
-
-func HandleBadRequest(c *gin.Context, message string) {
-	response := ResponseWrapper{
-		Message:      message,
-		ResponseCode: 400,
-		Result:       nil,
-	}
-	c.JSON(http.StatusBadRequest, response)
+	return jsonResponse
 }

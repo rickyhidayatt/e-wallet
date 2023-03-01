@@ -16,74 +16,96 @@ type TransactionController struct {
 func (tc *TransactionController) TopUp(c *gin.Context) {
 	var topup model.Transaction
 	err := c.ShouldBindJSON(&topup)
+
 	if err != nil {
-		utils.HandleBadRequest(c, err.Error())
+		response := utils.ApiResponse("server error", http.StatusBadRequest, "error", err.Error())
+		c.JSON(http.StatusBadRequest, response)
+		return
 	}
 
 	amount, err := tc.transactionUseCase.TopUp(topup.UserId, topup.Amount)
-	if err != nil {
-		utils.HandleInternalServerError(c, err.Error())
-	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"balance": amount,
-	})
+	if err != nil {
+		response := utils.ApiResponse("top-up failed", http.StatusInternalServerError, "error", err.Error())
+		c.JSON(http.StatusInternalServerError, response)
+	} else {
+		response := utils.ApiResponse("successful top-up", http.StatusOK, "success", amount)
+		c.JSON(http.StatusOK, response)
+	}
 }
 
 func (tc *TransactionController) Transfer(c *gin.Context) {
 	var Transfer model.Transfer
 	err := c.ShouldBindJSON(&Transfer)
+
 	if err != nil {
-		utils.HandleBadRequest(c, err.Error())
+		response := utils.ApiResponse("server error", http.StatusBadRequest, "error", err.Error())
+		c.JSON(http.StatusBadRequest, response)
+		return
 	}
 
-	trf, err := tc.transactionUseCase.SendMoney(Transfer.UserId, Transfer.Amount, Transfer.BankName, Transfer.Category, Transfer.AccountNumber, Transfer.ReceiverName)
+	trf, err := tc.transactionUseCase.SendMoney(
+		Transfer.UserId,
+		Transfer.Amount,
+		Transfer.BankName,
+		Transfer.Category,
+		Transfer.AccountNumber,
+		Transfer.ReceiverName,
+	)
 
 	if err != nil {
-		utils.HandleInternalServerError(c, err.Error())
+		response := utils.ApiResponse("transaction failed", http.StatusInternalServerError, "error", err.Error())
+		c.JSON(http.StatusInternalServerError, response)
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"Transaction successful to :": trf.ReceiverName,
-			"Bank name : ":                trf.BankName,
-			"Balance : ":                  trf.Amount,
-		})
+		response := utils.ApiResponse("successful transaction", http.StatusOK, "success", trf)
+		c.JSON(http.StatusOK, response)
 	}
 }
 
 func (tc *TransactionController) RequestMoney(c *gin.Context) {
 	var transactions model.Transfer
 	err := c.ShouldBindJSON(&transactions)
+
 	if err != nil {
-		utils.HandleBadRequest(c, err.Error())
+		response := utils.ApiResponse("server error", http.StatusBadRequest, "error", err.Error())
+		c.JSON(http.StatusBadRequest, response)
+		return
 	}
 
-	req, err := tc.transactionUseCase.RequestMoney(transactions.UserId, transactions.Amount, transactions.BankName, transactions.AccountNumber, transactions.Category, transactions.ReceiverId)
+	req, err := tc.transactionUseCase.RequestMoney(
+		transactions.UserId,
+		transactions.Amount,
+		transactions.BankName,
+		transactions.AccountNumber,
+		transactions.Category,
+		transactions.ReceiverId,
+	)
 
 	if err != nil {
-		utils.HandleBadRequest(c, err.Error())
+		response := utils.ApiResponse("payment Request failed", http.StatusBadRequest, "error", err.Error())
+		c.JSON(http.StatusBadRequest, response)
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"Success requesting money from: ": req.ReciverId,
-		})
+		response := utils.ApiResponse("payment Request success", http.StatusOK, "success", req)
+		c.JSON(http.StatusOK, response)
 	}
 }
 
 func (tc *TransactionController) PrintTransactionHistory(c *gin.Context) {
-	/// print history disini
 	id := c.Param("id")
 	transactions, err := tc.transactionUseCase.PrintHistoryTransactionsById(id)
+
 	if err != nil {
-		utils.HandleInternalServerError(c, err.Error())
+		response := utils.ApiResponse("server error", http.StatusBadRequest, "error", err.Error())
+		c.JSON(http.StatusBadRequest, response)
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"transaction history": transactions,
-		})
+		response := utils.ApiResponse("transaction history", http.StatusOK, "success", transactions)
+		c.JSON(http.StatusOK, response)
 	}
 }
 
-func NewTransactionController(router *gin.Engine, transactionUc usecase.TransactionUseCase) *TransactionController {
+func NewTransactionController(router *gin.Engine, transactionArg usecase.TransactionUseCase) *TransactionController {
 	trxController := TransactionController{
-		transactionUseCase: transactionUc,
+		transactionUseCase: transactionArg,
 	}
 
 	r := router.Group("api/transaction")

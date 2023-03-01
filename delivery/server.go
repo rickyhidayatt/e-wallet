@@ -28,6 +28,7 @@ func Server() *appServer {
 func (a *appServer) initHandlers() {
 	//masukan yang mau di jalankan handlernya dari package controller
 	controller.NewTransactionController(a.engine, a.useCaseManager.TransactionUseCase())
+	// controller.NewUserController(a.engine, a.useCaseManager.UserUseCase())
 }
 
 func (a *appServer) Run() {

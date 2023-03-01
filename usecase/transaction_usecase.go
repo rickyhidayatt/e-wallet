@@ -23,47 +23,12 @@ type transactionUseCase struct {
 	receiverRepo    repository.ReceiverRepository
 }
 
-func (tx *transactionUseCase) RequestMoney(userId string, amount int, bankName string, accountNumber string, category string, receiverId string) (model.Transaction, error) {
-	// cek receiverId ada atau tidak
-	var transaction model.Transaction
-	_, err := tx.receiverRepo.GetReceiverById(receiverId)
-	if err != nil {
-		return transaction, errors.New("receiver account id not found")
-	}
-	// cek userId ada di db ada apa enggak
-	_, err = tx.userRepo.GetUserById(userId)
-	if err != nil {
-		return transaction, errors.New("user id, not found")
-	}
-
-	if amount < 500 {
-		return transaction, errors.New("the minimum amount to request money is IDR 500")
-	} else if receiverId == "" {
-		return transaction, errors.New("please fill in the receiver id")
-	}
-
-	transactions := model.Transaction{
-		Id:              utils.GenerateId(),
-		UserId:          userId,
-		TransactionDate: time.Now(),
-		TransactionType: "Request Money",
-		Amount:          amount,
-		ReciverId:       receiverId,
-		Category:        category,
-	}
-
-	err = tx.transactionRepo.SaveTransaction(&transactions)
-	if err != nil {
-		return transaction, errors.New("failed save transaction")
-	}
-
-	return transactions, nil
-}
-
 func (tx *transactionUseCase) TopUp(userId string, addBalance int) (int, error) {
 
 	checkId, err := tx.userRepo.GetUserById(userId)
-	if checkId == nil {
+	if err != nil {
+		return 0, err
+	} else if checkId == nil {
 		return 0, errors.New("id not found")
 	}
 
@@ -76,7 +41,6 @@ func (tx *transactionUseCase) TopUp(userId string, addBalance int) (int, error) 
 		log.Fatal(err)
 	}
 
-	//check id exist
 	if len(id) == 0 {
 		balances := model.Balances{
 			UserId:  userId,
@@ -100,7 +64,9 @@ func (tx *transactionUseCase) TopUp(userId string, addBalance int) (int, error) 
 func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) (*model.Transfer, error) {
 
 	user, err := tx.userRepo.GetUserById(userId)
-	if user == nil {
+	if err != nil {
+		return nil, err
+	} else if user == nil {
 		return nil, errors.New("failed to get user by id")
 	}
 
@@ -117,7 +83,7 @@ func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName stri
 
 	for _, balance := range balances {
 		if balance < amount {
-			return nil, errors.New("there are insufficient funds on your account")
+			return nil, errors.New("your money is not enough")
 		}
 	}
 
@@ -181,6 +147,43 @@ func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) ([]mod
 	}
 	transactionsHistory = append(transactionsHistory, trxHistory...)
 	return transactionsHistory, nil
+}
+
+func (tx *transactionUseCase) RequestMoney(userId string, amount int, bankName string, accountNumber string, category string, receiverId string) (model.Transaction, error) {
+
+	var transaction model.Transaction
+	_, err := tx.receiverRepo.GetReceiverById(receiverId)
+	if err != nil {
+		return transaction, errors.New("receiver account id not found")
+	}
+
+	_, err = tx.userRepo.GetUserById(userId)
+	if err != nil {
+		return transaction, errors.New("user id, not found")
+	}
+
+	if amount < 500 {
+		return transaction, errors.New("the minimum amount to request money is IDR 500")
+	} else if receiverId == "" {
+		return transaction, errors.New("please fill in the receiver id")
+	}
+
+	transactions := model.Transaction{
+		Id:              utils.GenerateId(),
+		UserId:          userId,
+		TransactionDate: time.Now(),
+		TransactionType: "Request Money",
+		Amount:          amount,
+		ReciverId:       receiverId,
+		Category:        category,
+	}
+
+	err = tx.transactionRepo.SaveTransaction(&transactions)
+	if err != nil {
+		return transaction, errors.New("failed save transaction")
+	}
+
+	return transactions, nil
 }
 
 func NewTransactionUseCase(tx repository.TransactionRepository, usr repository.UserRepository, blc repository.BalanceRepository, rcv repository.ReceiverRepository) TransactionUseCase {
