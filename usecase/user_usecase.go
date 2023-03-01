@@ -5,12 +5,14 @@ import (
 	"e-wallet/repository"
 	"e-wallet/utils"
 	"errors"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUseCase interface {
-	ViewAllUser(page int, totalRows int) ([]model.User, error)
-	CreateNewUser(newUser *model.User) error
-	UpdateUser(user model.User) error
+	RegisterUser(input *model.User) (model.User, error)
+	Login(email string, password string) (model.User, error)
+	UpdateUser(update *model.User) (model.User, error)
 	DeleteUserById(id string) error
 }
 
@@ -18,20 +20,79 @@ type userUseCase struct {
 	userRepo repository.UserRepository
 }
 
-func (u *userUseCase) ViewAllUser(page int, totalRows int) ([]model.User, error) {
-	return u.userRepo.ViewAll(page, totalRows)
-}
+func (u *userUseCase) RegisterUser(input *model.User) (model.User, error) {
+	var user = model.User{}
+	user.Id = utils.GenerateId()
 
-func (u *userUseCase) CreateNewUser(newUser *model.User) error {
-	newUser.Id = utils.GenerateId()
-	return u.userRepo.CreateNew(newUser)
-}
+	user.Name = input.Name
+	user.Email = input.Email
+	user.PhoneNumber = input.PhoneNumber
+	user.Address = input.Address
 
-func (u *userUseCase) UpdateUser(user model.User) error {
-	if len(user.Name) < 3 || len(user.Name) > 20 {
-		return errors.New("nama Minimal 3 Sampai 20 karakter")
+	Password, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
+	if err != nil {
+		return user, err
 	}
-	return nil
+
+	user.Password = string(Password)
+
+	err = u.userRepo.SaveUser(&user)
+	if err != nil {
+		return user, errors.New("failed register user")
+	}
+
+	return user, nil
+}
+
+func (u *userUseCase) Login(email string, password string) (model.User, error) {
+	var usernil = model.User{}
+	user, err := u.userRepo.FindByEmail(email)
+
+	if err != nil {
+		return usernil, err
+	}
+
+	if user.Id == "" {
+		return usernil, errors.New("no user found on that email")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		return usernil, errors.New("password incorrect")
+	}
+
+	if user.Email != email {
+		return usernil, errors.New("invalid email")
+	}
+
+	return user, nil
+}
+
+func (u *userUseCase) UpdateUser(update *model.User) (model.User, error) {
+	var updatedUser model.User
+	user, err := u.userRepo.GetUserById(update.Id)
+	if err != nil {
+		return updatedUser, err
+	}
+
+	user.Name = update.Name
+	user.Email = update.Email
+	user.Address = update.Address
+
+	newPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return updatedUser, err
+	}
+	user.Password = string(newPass)
+
+	err = u.userRepo.Update(user)
+	if err != nil {
+		return updatedUser, err
+	}
+
+	updatedUser = *user
+
+	return updatedUser, nil
 }
 
 func (u *userUseCase) DeleteUserById(id string) error {
