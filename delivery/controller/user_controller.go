@@ -75,6 +75,34 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 	}
 }
 
+func (uc *UserController) CheckEmail(c *gin.Context) {
+	var input model.CheckEmail
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		response := utils.ApiResponse("server error", http.StatusBadRequest, "error", err.Error())
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	isEmailAvailable, err := uc.userUseCase.IsEmailAvailable(input)
+	if err != nil {
+		data := gin.H{
+			"is_available": true,
+		}
+		response := utils.ApiResponse("email is is available", http.StatusInternalServerError, "error", data)
+		c.JSON(http.StatusInternalServerError, response)
+	} else {
+		data := gin.H{
+			"is_available": isEmailAvailable,
+		}
+
+		response := utils.ApiResponse("email has been registered", http.StatusOK, "success", data)
+		c.JSON(http.StatusOK, response)
+	}
+
+}
+
 func NewUserController(router *gin.Engine, userArg usecase.UserUseCase) *UserController {
 	userController := UserController{
 		userUseCase: userArg,
@@ -84,5 +112,6 @@ func NewUserController(router *gin.Engine, userArg usecase.UserUseCase) *UserCon
 	r.POST("/login", userController.Login)
 	r.POST("/signup", userController.RegisterUser)
 	r.PUT("/update", userController.UpdateUser)
+	r.POST("/email/checking", userController.CheckEmail)
 	return &userController
 }

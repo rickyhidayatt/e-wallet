@@ -11,6 +11,7 @@ type UserUseCase interface {
 	RegisterUser(input *model.UserRegister) (model.User, error)
 	Login(input model.UserLogin) (model.User, error)
 	UpdateUser(update *model.UserUpdate) (model.User, error)
+	IsEmailAvailable(input model.CheckEmail) (bool, error)
 	DeleteUserById(id string) error
 }
 
@@ -83,7 +84,23 @@ func (u *userUseCase) UpdateUser(update *model.UserUpdate) (model.User, error) {
 	return users, nil
 }
 
+func (u *userUseCase) IsEmailAvailable(input model.CheckEmail) (bool, error) {
+	email := input.Email
+	user, err := u.userRepo.FindByEmail(email)
+
+	if err != nil {
+		return false, errors.New("email not found")
+	}
+
+	if user.Id == "" {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 func (u *userUseCase) DeleteUserById(id string) error {
+
 	return u.userRepo.DeleteById(id)
 }
 

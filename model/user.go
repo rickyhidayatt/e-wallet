@@ -36,3 +36,7 @@ type UserUpdate struct {
 	PhoneNumber string `json:"phone_number" binding:"required"`
 	Address     string `json:"address" binding:"required"`
 }
+
+type CheckEmail struct {
+	Email string `json:"email" binding:"required,email"`
+}
