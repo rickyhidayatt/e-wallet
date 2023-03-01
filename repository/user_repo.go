@@ -3,42 +3,42 @@ package repository
 import (
 	"e-wallet/model"
 	"e-wallet/utils"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type UserRepository interface {
-	GetUserById(id string) ([]model.User, error)
-	ViewAll(page int, totalRows int) ([]model.User, error)
-	CreateNew(newUser *model.User) error
+	GetUserById(id string) (*model.User, error)
+	ViewAll() ([]model.User, error)
+	SaveUser(newUser *model.User) error
 	Update(user *model.User) error
 	DeleteById(id string) error
+	FindByEmail(email string) (model.User, error)
 }
 type userRepository struct {
 	db *sqlx.DB
 }
 
-func (r *userRepository) GetUserById(id string) ([]model.User, error) {
-	var user []model.User
-	err := r.db.Select(&user, utils.USER_BY_ID, id)
+func (r *userRepository) GetUserById(id string) (*model.User, error) {
+	var user = &model.User{}
+	err := r.db.Get(user, utils.USER_BY_ID, id)
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func (u *userRepository) ViewAll(page int, totalRows int) ([]model.User, error) {
-	limit := totalRows
-	offset := limit * (page - 1)
-	var users []model.User
-	err := u.db.Select(&users, utils.SELECT_ALL_USER, offset)
+func (u *userRepository) FindByEmail(email string) (model.User, error) {
+	var user model.User
+	err := u.db.Get(&user, utils.FIND_BY_EMAIL, email)
 	if err != nil {
-		return nil, err
+		return user, err
 	}
-	return users, nil
+	return user, nil
 }
 
-func (u *userRepository) CreateNew(newUser *model.User) error {
+func (u *userRepository) SaveUser(newUser *model.User) error {
 	_, err := u.db.NamedExec(utils.INSERT_NEW_USER, &newUser)
 	if err != nil {
 		return err
@@ -46,9 +46,20 @@ func (u *userRepository) CreateNew(newUser *model.User) error {
 	return nil
 }
 
+func (u *userRepository) ViewAll() ([]model.User, error) {
+	var users []model.User
+	err := u.db.Select(&users, utils.SELECT_ALL_USER)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (u *userRepository) Update(user *model.User) error {
 	_, err := u.db.NamedExec(utils.UPDATE_USER_BYID, &user)
+
 	if err != nil {
+		log.Fatal(err)
 		return err
 	}
 	return nil
