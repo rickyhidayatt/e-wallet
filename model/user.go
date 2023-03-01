@@ -3,11 +3,11 @@ package model
 import "time"
 
 type User struct {
-	Id             string
+	Id             string `db:"id"`
 	Name           string
-	Email          string `json:"email" binding:"required,email"`
+	Email          string
 	PhoneNumber    string `db:"phone_number"`
-	Password       string `json:"password" binding:"required"`
+	Password       string
 	Address        string
 	BirthDate      time.Time `db:"birth_date"`
 	ProfilePicture string    `db:"profile_picture"`
@@ -16,6 +16,23 @@ type User struct {
 }
 
 type UserLogin struct {
-	Email    string
-	Password string
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+type UserRegister struct {
+	Name        string `json:"name" binding:"required"`
+	Email       string `json:"email" binding:"required,email"`
+	Password    string `json:"password" binding:"required"`
+	PhoneNumber string `json:"phone_number" binding:"required"`
+	Address     string `json:"address" binding:"required"`
+}
+
+type UserUpdate struct {
+	Id          string `json:"id" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Email       string `json:"email" binding:"required,email"`
+	Password    string `json:"password" binding:"required"`
+	PhoneNumber string `json:"phone_number" binding:"required"`
+	Address     string `json:"address" binding:"required"`
 }

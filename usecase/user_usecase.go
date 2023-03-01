@@ -5,14 +5,12 @@ import (
 	"e-wallet/repository"
 	"e-wallet/utils"
 	"errors"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUseCase interface {
-	RegisterUser(input *model.User) (model.User, error)
-	Login(email string, password string) (model.User, error)
-	UpdateUser(update *model.User) (model.User, error)
+	RegisterUser(input *model.UserRegister) (model.User, error)
+	Login(input model.UserLogin) (model.User, error)
+	UpdateUser(update *model.UserUpdate) (model.User, error)
 	DeleteUserById(id string) error
 }
 
@@ -20,7 +18,7 @@ type userUseCase struct {
 	userRepo repository.UserRepository
 }
 
-func (u *userUseCase) RegisterUser(input *model.User) (model.User, error) {
+func (u *userUseCase) RegisterUser(input *model.UserRegister) (model.User, error) {
 	var user = model.User{}
 	user.Id = utils.GenerateId()
 
@@ -28,15 +26,9 @@ func (u *userUseCase) RegisterUser(input *model.User) (model.User, error) {
 	user.Email = input.Email
 	user.PhoneNumber = input.PhoneNumber
 	user.Address = input.Address
+	user.Password = input.Password
 
-	Password, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
-	if err != nil {
-		return user, err
-	}
-
-	user.Password = string(Password)
-
-	err = u.userRepo.SaveUser(&user)
+	err := u.userRepo.SaveUser(&user)
 	if err != nil {
 		return user, errors.New("failed register user")
 	}
@@ -44,55 +36,51 @@ func (u *userUseCase) RegisterUser(input *model.User) (model.User, error) {
 	return user, nil
 }
 
-func (u *userUseCase) Login(email string, password string) (model.User, error) {
-	var usernil = model.User{}
+func (u *userUseCase) Login(input model.UserLogin) (model.User, error) {
+	email := input.Email
+	user := model.User{}
+
+	user.Email = input.Email
+	user.Password = input.Password
+
 	user, err := u.userRepo.FindByEmail(email)
 
 	if err != nil {
-		return usernil, err
+		return user, err
 	}
 
 	if user.Id == "" {
-		return usernil, errors.New("no user found on that email")
+		return user, errors.New("no user found on that email")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		return usernil, errors.New("password incorrect")
-	}
-
-	if user.Email != email {
-		return usernil, errors.New("invalid email")
+	if user.Password != input.Password {
+		return user, errors.New("password incorrect")
 	}
 
 	return user, nil
 }
 
-func (u *userUseCase) UpdateUser(update *model.User) (model.User, error) {
-	var updatedUser model.User
-	user, err := u.userRepo.GetUserById(update.Id)
+func (u *userUseCase) UpdateUser(update *model.UserUpdate) (model.User, error) {
+	var users = model.User{}
+	users.Id = update.Id
+
+	user, err := u.userRepo.GetUserById(users.Id)
 	if err != nil {
-		return updatedUser, err
+		return users, errors.New("id not found")
 	}
 
-	user.Name = update.Name
-	user.Email = update.Email
-	user.Address = update.Address
-
-	newPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return updatedUser, err
-	}
-	user.Password = string(newPass)
+	users.Name = update.Name
+	users.Email = update.Email
+	users.Address = update.Address
+	users.Password = update.Password
+	users.Address = update.Address
 
 	err = u.userRepo.Update(user)
 	if err != nil {
-		return updatedUser, err
+		return users, err
 	}
 
-	updatedUser = *user
-
-	return updatedUser, nil
+	return users, nil
 }
 
 func (u *userUseCase) DeleteUserById(id string) error {
