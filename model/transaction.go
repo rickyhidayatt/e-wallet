@@ -18,5 +18,6 @@ type Transfer struct {
 	BankName      string `json:"bank_name" binding:"required"`
 	Category      string `json:"category"`
 	AccountNumber string `json:"account_number" binding:"required"`
-	ReceiverName  string `json:"receiver_name" binding:"required"`
+	ReceiverName  string `json:"receiver_name"`
+	ReceiverId    string `json:"receiver_id"`
 }

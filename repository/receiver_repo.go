@@ -3,8 +3,7 @@ package repository
 import (
 	"e-wallet/model"
 	"e-wallet/utils"
-	"fmt"
-	"log"
+	"errors"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -22,9 +21,7 @@ func (r *receiverRepository) GetReceiverById(receiverId string) (model.Receiver,
 	var receivers model.Receiver
 	err := r.db.Get(&receivers, utils.GET_RECEIVER_BY_ID, receiverId)
 	if err != nil {
-		fmt.Println("Masuk sini gak")
-		log.Fatal(err)
-		return receivers, err
+		return receivers, errors.New("id receiver not found")
 	}
 
 	return receivers, nil
