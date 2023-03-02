@@ -63,26 +63,38 @@ func (u *userUseCase) Login(input model.UserLogin) (model.User, error) {
 }
 
 func (u *userUseCase) UpdateUser(update *model.UserUpdate) (model.User, error) {
-	var users = model.User{}
-	users.Id = update.Id
 
-	user, err := u.userRepo.GetUserById(users.Id)
+	user, err := u.userRepo.GetUserById(update.Id)
+
 	if err != nil {
-		return users, errors.New("id not found")
+		return model.User{}, err
 	}
 
-	users.Name = update.Name
-	users.Email = update.Email
-	users.Address = update.Address
-	users.Password = update.Password
-	users.Address = update.Address
-
-	err = u.userRepo.Update(user)
-	if err != nil {
-		return users, err
+	if user == nil {
+		return model.User{}, errors.New("user not found")
 	}
 
-	return users, nil
+	// update jika tabel di database gak kosong
+	if update.Name != "" {
+		user.Name = update.Name
+	}
+	if update.Email != "" {
+		user.Email = update.Email
+	}
+	if update.Address != "" {
+		user.Address = update.Address
+	}
+	if update.Password != "" {
+		user.Password = update.Password
+	}
+
+	updatedUser, err := u.userRepo.Update(user)
+	if err != nil {
+		return model.User{}, err
+	}
+
+	return updatedUser, nil
+
 }
 
 func (u *userUseCase) IsEmailAvailable(input model.CheckEmail) (bool, error) {
