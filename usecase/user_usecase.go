@@ -5,14 +5,14 @@ import (
 	"e-wallet/repository"
 	"e-wallet/utils"
 	"errors"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUseCase interface {
-	RegisterUser(input *model.User) (model.User, error)
-	Login(email string, password string) (model.User, error)
-	UpdateUser(update *model.User) (model.User, error)
+	RegisterUser(input *model.UserRegister) (model.User, error)
+	Login(input model.UserLogin) (model.User, error)
+	UpdateUser(update *model.UserUpdate) (*model.User, error)
+	IsEmailAvailable(input model.CheckEmail) (bool, error)
+	SaveAvatar(id string, fileLocation string) (model.User, error)
 	DeleteUserById(id string) error
 }
 
@@ -20,7 +20,7 @@ type userUseCase struct {
 	userRepo repository.UserRepository
 }
 
-func (u *userUseCase) RegisterUser(input *model.User) (model.User, error) {
+func (u *userUseCase) RegisterUser(input *model.UserRegister) (model.User, error) {
 	var user = model.User{}
 	user.Id = utils.GenerateId()
 
@@ -28,15 +28,9 @@ func (u *userUseCase) RegisterUser(input *model.User) (model.User, error) {
 	user.Email = input.Email
 	user.PhoneNumber = input.PhoneNumber
 	user.Address = input.Address
+	user.Password = input.Password
 
-	Password, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
-	if err != nil {
-		return user, err
-	}
-
-	user.Password = string(Password)
-
-	err = u.userRepo.SaveUser(&user)
+	err := u.userRepo.SaveUser(&user)
 	if err != nil {
 		return user, errors.New("failed register user")
 	}
@@ -44,58 +38,99 @@ func (u *userUseCase) RegisterUser(input *model.User) (model.User, error) {
 	return user, nil
 }
 
-func (u *userUseCase) Login(email string, password string) (model.User, error) {
-	var usernil = model.User{}
+func (u *userUseCase) Login(input model.UserLogin) (model.User, error) {
+	email := input.Email
+	user := model.User{}
+
+	user.Email = input.Email
+	user.Password = input.Password
+
 	user, err := u.userRepo.FindByEmail(email)
 
 	if err != nil {
-		return usernil, err
+		return user, err
 	}
 
 	if user.Id == "" {
-		return usernil, errors.New("no user found on that email")
+		return user, errors.New("no user found on that email")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		return usernil, errors.New("password incorrect")
-	}
-
-	if user.Email != email {
-		return usernil, errors.New("invalid email")
+	if user.Password != input.Password {
+		return user, errors.New("password incorrect")
 	}
 
 	return user, nil
 }
 
-func (u *userUseCase) UpdateUser(update *model.User) (model.User, error) {
-	var updatedUser model.User
+func (u *userUseCase) UpdateUser(update *model.UserUpdate) (*model.User, error) {
+
 	user, err := u.userRepo.GetUserById(update.Id)
+
 	if err != nil {
-		return updatedUser, err
+		return &model.User{}, err
 	}
 
-	user.Name = update.Name
-	user.Email = update.Email
-	user.Address = update.Address
-
-	newPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return updatedUser, err
-	}
-	user.Password = string(newPass)
-
-	err = u.userRepo.Update(user)
-	if err != nil {
-		return updatedUser, err
+	if user == nil {
+		return nil, errors.New("user not found")
 	}
 
-	updatedUser = *user
+	// update jika tabel di database gak kosong
+	if update.Name != "" {
+		user.Name = update.Name
+	}
+	if update.Email != "" {
+		user.Email = update.Email
+	}
+	if update.Address != "" {
+		user.Address = update.Address
+	}
+	if update.Password != "" {
+		user.Password = update.Password
+	}
+
+	updatedUser, err := u.userRepo.Update(user)
+	if err != nil {
+		return nil, err
+	}
 
 	return updatedUser, nil
+
+}
+
+func (u *userUseCase) IsEmailAvailable(input model.CheckEmail) (bool, error) {
+	email := input.Email
+	user, err := u.userRepo.FindByEmail(email)
+
+	if err != nil {
+		return false, errors.New("email not found")
+	}
+
+	if user.Id == "" {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (u *userUseCase) SaveAvatar(id string, fileLocation string) (model.User, error) {
+
+	user, err := u.userRepo.GetUserById(id)
+	if err != nil {
+		return model.User{}, err
+	}
+
+	user.ProfilePicture = fileLocation
+
+	updateUser, err := u.userRepo.SaveAvatar(user)
+	if err != nil {
+		return updateUser, err
+	}
+
+	return updateUser, nil
 }
 
 func (u *userUseCase) DeleteUserById(id string) error {
+
 	return u.userRepo.DeleteById(id)
 }
 

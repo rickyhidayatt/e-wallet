@@ -3,18 +3,17 @@ package repository
 import (
 	"e-wallet/model"
 	"e-wallet/utils"
-	"log"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type UserRepository interface {
 	GetUserById(id string) (*model.User, error)
-	ViewAll() ([]model.User, error)
 	SaveUser(newUser *model.User) error
-	Update(user *model.User) error
+	Update(user *model.User) (*model.User, error)
 	DeleteById(id string) error
 	FindByEmail(email string) (model.User, error)
+	SaveAvatar(user *model.User) (model.User, error)
 }
 type userRepository struct {
 	db *sqlx.DB
@@ -46,23 +45,39 @@ func (u *userRepository) SaveUser(newUser *model.User) error {
 	return nil
 }
 
-func (u *userRepository) ViewAll() ([]model.User, error) {
-	var users []model.User
-	err := u.db.Select(&users, utils.SELECT_ALL_USER)
+func (u *userRepository) Update(user *model.User) (*model.User, error) {
+	_, err := u.db.NamedExec(utils.UPDATE_USER_BYID, user)
+
 	if err != nil {
 		return nil, err
 	}
-	return users, nil
-}
 
-func (u *userRepository) Update(user *model.User) error {
-	_, err := u.db.NamedExec(utils.UPDATE_USER_BYID, &user)
+	updatedUser := &model.User{}
+	err = u.db.Get(&updatedUser, utils.USER_BY_ID, user.Id)
 
 	if err != nil {
-		log.Fatal(err)
-		return err
+		return nil, err
 	}
-	return nil
+
+	return updatedUser, nil
+}
+
+func (u *userRepository) SaveAvatar(user *model.User) (model.User, error) {
+	_, err := u.db.NamedExec(utils.UPDATE_USER_BYID, user)
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	updatedUser := model.User{}
+	err = u.db.Get(&updatedUser, utils.USER_BY_ID, user.Id)
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	return updatedUser, nil
+
 }
 
 func (u *userRepository) DeleteById(id string) error {
