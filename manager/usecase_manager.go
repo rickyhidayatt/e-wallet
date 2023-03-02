@@ -8,7 +8,8 @@ type UseCaseManager interface {
 }
 
 type useCaseManager struct {
-	repoManager RepositoryManager
+	repoManager    RepositoryManager
+	useCaseManager UseCaseManager
 }
 
 func (u *useCaseManager) TransactionUseCase() usecase.TransactionUseCase {
@@ -21,7 +22,7 @@ func (u *useCaseManager) TransactionUseCase() usecase.TransactionUseCase {
 }
 
 func (u *useCaseManager) UserUseCase() usecase.UserUseCase {
-	return u.UserUseCase()
+	return usecase.NewUserUseCase(u.repoManager.UserRepository())
 }
 
 func NewUseCaseManager(rm RepositoryManager) UseCaseManager {

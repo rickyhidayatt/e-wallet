@@ -11,9 +11,9 @@ import (
 
 type TransactionUseCase interface {
 	TopUp(userId string, addBalance int) (int, error)
-	SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) (*model.Transfer, error)
+	SendMoney(req model.TransactionSend) (*model.Transfer, error)
 	PrintHistoryTransactionsById(userId string) ([]model.TransactionReceiver, error)
-	RequestMoney(userId string, amount int, bankName string, accountNumber string, category string, receiverId string) (model.Transaction, error)
+	RequestMoney(req model.TransactionRequest) (model.Transaction, error)
 }
 
 type transactionUseCase struct {
@@ -61,38 +61,37 @@ func (tx *transactionUseCase) TopUp(userId string, addBalance int) (int, error) 
 	return addBalance, nil
 }
 
-func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName string, category string, accountNumber string, receiverName string) (*model.Transfer, error) {
-
-	user, err := tx.userRepo.GetUserById(userId)
+func (tx *transactionUseCase) SendMoney(req model.TransactionSend) (*model.Transfer, error) {
+	user, err := tx.userRepo.GetUserById(req.UserId)
 	if err != nil {
 		return nil, err
 	} else if user == nil {
 		return nil, errors.New("failed to get user by id")
 	}
 
-	if amount < 5000 {
+	if req.Amount < 5000 {
 		return nil, errors.New("the minimum amount is IDR 5.000")
-	} else if receiverName == "" {
+	} else if req.ReceiverName == "" {
 		return nil, errors.New("please fill in the receiver name")
 	}
 
-	balances, err := tx.balanceRepo.GetBalance(userId)
+	balances, err := tx.balanceRepo.GetBalance(req.UserId)
 	if err != nil {
 		return nil, errors.New("failed to get user balances")
 	}
 
 	for _, balance := range balances {
-		if balance < amount {
+		if balance < req.Amount {
 			return nil, errors.New("your money is not enough")
 		}
 	}
 
 	receiver := model.Receiver{
 		Id:            utils.GenerateId(),
-		UserId:        userId,
-		Name:          receiverName,
-		BankName:      bankName,
-		AccountNumber: accountNumber,
+		UserId:        req.UserId,
+		Name:          req.ReceiverName,
+		BankName:      req.BankName,
+		AccountNumber: req.AccountNumber,
 	}
 
 	err = tx.transactionRepo.SaveReceiver(&receiver)
@@ -102,35 +101,36 @@ func (tx *transactionUseCase) SendMoney(userId string, amount int, bankName stri
 
 	transaction := model.Transaction{
 		Id:              utils.GenerateId(),
-		UserId:          userId,
+		UserId:          req.UserId,
 		TransactionDate: time.Now(),
-		TransactionType: bankName,
-		Amount:          amount,
+		TransactionType: req.BankName,
+		Amount:          req.Amount,
 		ReciverId:       receiver.Id,
-		Category:        category,
+		Category:        req.Category,
 	}
-	err = tx.transactionRepo.SaveTransaction(&transaction)
 
+	err = tx.transactionRepo.SaveTransaction(&transaction)
 	if err != nil {
 		log.Fatal("failed to save transaction", err)
 		return nil, err
 	}
 
-	err = tx.balanceRepo.SendBalance(userId, amount)
-
+	err = tx.balanceRepo.SendBalance(req.UserId, req.Amount)
 	if err != nil {
 		log.Fatal("failed to send balance", err)
 		return nil, err
 	}
 
-	return &model.Transfer{
-		UserId:        userId,
-		Amount:        amount,
-		Category:      category,
-		BankName:      bankName,
-		ReceiverName:  receiverName,
-		AccountNumber: accountNumber,
-	}, nil
+	transfer := &model.Transfer{
+		UserId:        req.UserId,
+		Amount:        req.Amount,
+		Category:      req.Category,
+		BankName:      req.BankName,
+		ReceiverName:  req.ReceiverName,
+		AccountNumber: req.AccountNumber,
+	}
+
+	return transfer, nil
 }
 
 func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) ([]model.TransactionReceiver, error) {
@@ -138,52 +138,55 @@ func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) ([]mod
 	if userId == "" {
 		return nil, errors.New("fill in your user id")
 	}
+
 	trxHistory, err := tx.transactionRepo.PrintHistoryTransactions(userId)
 	if err != nil {
 		return nil, errors.New("id not found")
 	}
+
 	if len(trxHistory) == 0 {
 		return nil, errors.New("not found transaction data for user")
 	}
+
 	transactionsHistory = append(transactionsHistory, trxHistory...)
 	return transactionsHistory, nil
 }
 
-func (tx *transactionUseCase) RequestMoney(userId string, amount int, bankName string, accountNumber string, category string, receiverId string) (model.Transaction, error) {
-
+func (tx *transactionUseCase) RequestMoney(req model.TransactionRequest) (model.Transaction, error) {
 	var transaction model.Transaction
-	_, err := tx.receiverRepo.GetReceiverById(receiverId)
+
+	_, err := tx.receiverRepo.GetReceiverById(req.ReceiverID)
 	if err != nil {
 		return transaction, errors.New("receiver account id not found")
 	}
 
-	_, err = tx.userRepo.GetUserById(userId)
+	_, err = tx.userRepo.GetUserById(req.UserId)
 	if err != nil {
-		return transaction, errors.New("user id, not found")
+		return transaction, errors.New("user id not found")
 	}
 
-	if amount < 500 {
+	if req.Amount < 500 {
 		return transaction, errors.New("the minimum amount to request money is IDR 500")
-	} else if receiverId == "" {
+	} else if req.ReceiverID == "" {
 		return transaction, errors.New("please fill in the receiver id")
 	}
 
-	transactions := model.Transaction{
+	transaction = model.Transaction{
 		Id:              utils.GenerateId(),
-		UserId:          userId,
+		UserId:          req.UserId,
 		TransactionDate: time.Now(),
 		TransactionType: "Request Money",
-		Amount:          amount,
-		ReciverId:       receiverId,
-		Category:        category,
+		Amount:          req.Amount,
+		ReciverId:       req.ReceiverID,
+		Category:        req.Category,
 	}
 
-	err = tx.transactionRepo.SaveTransaction(&transactions)
+	err = tx.transactionRepo.SaveTransaction(&transaction)
 	if err != nil {
-		return transaction, errors.New("failed save transaction")
+		return transaction, errors.New("failed to save transaction")
 	}
 
-	return transactions, nil
+	return transaction, nil
 }
 
 func NewTransactionUseCase(tx repository.TransactionRepository, usr repository.UserRepository, blc repository.BalanceRepository, rcv repository.ReceiverRepository) TransactionUseCase {

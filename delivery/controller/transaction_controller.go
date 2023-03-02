@@ -35,7 +35,7 @@ func (tc *TransactionController) TopUp(c *gin.Context) {
 }
 
 func (tc *TransactionController) Transfer(c *gin.Context) {
-	var Transfer model.Transfer
+	var Transfer model.TransactionSend
 	err := c.ShouldBindJSON(&Transfer)
 
 	if err != nil {
@@ -44,14 +44,7 @@ func (tc *TransactionController) Transfer(c *gin.Context) {
 		return
 	}
 
-	trf, err := tc.transactionUseCase.SendMoney(
-		Transfer.UserId,
-		Transfer.Amount,
-		Transfer.BankName,
-		Transfer.Category,
-		Transfer.AccountNumber,
-		Transfer.ReceiverName,
-	)
+	trf, err := tc.transactionUseCase.SendMoney(Transfer)
 
 	if err != nil {
 		response := utils.ApiResponse("transaction failed", http.StatusInternalServerError, "error", err.Error())
@@ -63,7 +56,7 @@ func (tc *TransactionController) Transfer(c *gin.Context) {
 }
 
 func (tc *TransactionController) RequestMoney(c *gin.Context) {
-	var transactions model.Transfer
+	var transactions model.TransactionRequest
 	err := c.ShouldBindJSON(&transactions)
 
 	if err != nil {
@@ -72,14 +65,7 @@ func (tc *TransactionController) RequestMoney(c *gin.Context) {
 		return
 	}
 
-	req, err := tc.transactionUseCase.RequestMoney(
-		transactions.UserId,
-		transactions.Amount,
-		transactions.BankName,
-		transactions.AccountNumber,
-		transactions.Category,
-		transactions.ReceiverId,
-	)
+	req, err := tc.transactionUseCase.RequestMoney(transactions)
 
 	if err != nil {
 		response := utils.ApiResponse("payment Request failed", http.StatusBadRequest, "error", err.Error())
