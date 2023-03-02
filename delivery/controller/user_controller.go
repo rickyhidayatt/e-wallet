@@ -103,6 +103,50 @@ func (uc *UserController) CheckEmail(c *gin.Context) {
 
 }
 
+func (uc *UserController) UploadAvatar(c *gin.Context) {
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		data := gin.H{
+			"is_uploaded": false,
+		}
+		response := utils.ApiResponse("no file you uploaded", http.StatusBadRequest, "error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	//save file
+	path := "images/" + file.Filename
+	err = c.SaveUploadedFile(file, path)
+	if err != nil {
+		data := gin.H{
+			"is_uploaded": false,
+		}
+		response := utils.ApiResponse("failed to upload avatar", http.StatusBadRequest, "error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// nanti dapet dari jwt
+	fakeId := "4e3c55684bc748b2a2b495191e4243a1"
+	// nanti dari jwt
+	_, err = uc.userUseCase.SaveAvatar(fakeId, path)
+	if err != nil {
+		data := gin.H{
+			"is_uploaded": false,
+		}
+		response := utils.ApiResponse("failed to upload avatar", http.StatusBadRequest, "error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	data := gin.H{
+		"is_uploaded": true,
+	}
+	response := utils.ApiResponse("success uploaded avatar", http.StatusOK, "error", data)
+	c.JSON(http.StatusOK, response)
+
+}
+
 func NewUserController(router *gin.Engine, userArg usecase.UserUseCase) *UserController {
 	userController := UserController{
 		userUseCase: userArg,
@@ -113,5 +157,6 @@ func NewUserController(router *gin.Engine, userArg usecase.UserUseCase) *UserCon
 	r.POST("/signup", userController.RegisterUser)
 	r.PUT("/update", userController.UpdateUser)
 	r.POST("/email/checking", userController.CheckEmail)
+	r.POST("/avatars", userController.UploadAvatar)
 	return &userController
 }

@@ -12,6 +12,7 @@ type UserUseCase interface {
 	Login(input model.UserLogin) (model.User, error)
 	UpdateUser(update *model.UserUpdate) (model.User, error)
 	IsEmailAvailable(input model.CheckEmail) (bool, error)
+	SaveAvatar(id string, fileLocation string) (model.User, error)
 	DeleteUserById(id string) error
 }
 
@@ -97,6 +98,23 @@ func (u *userUseCase) IsEmailAvailable(input model.CheckEmail) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (u *userUseCase) SaveAvatar(id string, fileLocation string) (model.User, error) {
+
+	user, err := u.userRepo.GetUserById(id)
+	if err != nil {
+		return model.User{}, err
+	}
+
+	user.ProfilePicture = fileLocation
+
+	updateUser, err := u.userRepo.SaveAvatar(user)
+	if err != nil {
+		return updateUser, err
+	}
+
+	return updateUser, nil
 }
 
 func (u *userUseCase) DeleteUserById(id string) error {

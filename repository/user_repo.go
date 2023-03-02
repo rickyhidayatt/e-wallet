@@ -15,6 +15,7 @@ type UserRepository interface {
 	Update(user *model.User) error
 	DeleteById(id string) error
 	FindByEmail(email string) (model.User, error)
+	SaveAvatar(user *model.User) (model.User, error)
 }
 type userRepository struct {
 	db *sqlx.DB
@@ -63,6 +64,25 @@ func (u *userRepository) Update(user *model.User) error {
 		return err
 	}
 	return nil
+}
+
+func (u *userRepository) SaveAvatar(user *model.User) (model.User, error) {
+	_, err := u.db.NamedExec(utils.UPDATE_USER_BYID, user)
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	// fetch the updated user record from the database
+	updatedUser := model.User{}
+	err = u.db.Get(&updatedUser, utils.USER_BY_ID, user.Id)
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	return updatedUser, nil
+
 }
 
 func (u *userRepository) DeleteById(id string) error {
