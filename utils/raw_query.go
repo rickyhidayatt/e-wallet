@@ -20,11 +20,18 @@ const (
 	INSERT_RECEIVER = "INSERT INTO receivers (id, user_id, name, bank_name, account_number) VALUES (:id, :user_id, :name, :bank_name, :account_number)"
 
 	//USERS
-	SELECT_USER_BYID = "SELECT * FROM users WHERE id=$1"
-	SELECT_ALL_USER  = "SELECT * FROM users"
-	INSERT_NEW_USER  = "INSERT INTO users (name, email, phonenumber, password, address, birthDate) VALUES ($1, $2, $3, $4, $5, $6)"
-	UPDATE_USER_BYID = "UPDATE users SET name=$1, email=$2, phonenumber=$3, password=$4, address=$5, birthdate=$6"
+	USER_BY_ID      = "SELECT * FROM users WHERE id=$1"
+	SELECT_ALL_USER = "SELECT * FROM users"
+	INSERT_NEW_USER = `
+	INSERT INTO users (id, name, email, phone_number, password, address, birth_date, profile_picture, created_at, update_at)
+	VALUES (:id, :name, :email, :phone_number, :password, :address, :birth_date, :profile_picture, :created_at, :update_at)
+	`
+	UPDATE_USER_BYID = `
+	UPDATE users SET name=:name, email=:email, phone_number=:phone_number, password=:password, address=:address, birth_date=:birth_date, profile_picture=:profile_picture, update_at=:update_at 
+	WHERE id=:id
+	`
 	DELETE_USER_BYID = "DELETE FROM users WHERE id = $1"
+	FIND_BY_EMAIL    = "SELECT * FROM users WHERE email = $1"
 
 	//RECEIVER
 	GET_RECEIVER_BY_ID = "SELECT * FROM receivers WHERE id = $1"

@@ -5,15 +5,14 @@ import (
 	"e-wallet/repository"
 	"e-wallet/utils"
 	"errors"
-	"net/mail"
-	"strconv"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUseCase interface {
-	ViewUserById(id string) (model.User, error)
-	ViewAllUser(page int, totalRows int) ([]model.User, error)
-	CreateNewUser(newUser *model.User) error
-	UpdateUser(user model.User) error
+	RegisterUser(input *model.User) (model.User, error)
+	Login(email string, password string) (model.User, error)
+	UpdateUser(update *model.User) (model.User, error)
 	DeleteUserById(id string) error
 }
 
@@ -21,45 +20,79 @@ type userUseCase struct {
 	userRepo repository.UserRepository
 }
 
-func (u *userUseCase) ViewUserById(id string) (model.User, error) {
-	return u.userRepo.ViewById(id)
-}
+func (u *userUseCase) RegisterUser(input *model.User) (model.User, error) {
+	var user = model.User{}
+	user.Id = utils.GenerateId()
 
-func (u *userUseCase) ViewAllUser(page int, totalRows int) ([]model.User, error) {
-	return u.userRepo.ViewAll(page, totalRows)
-}
+	user.Name = input.Name
+	user.Email = input.Email
+	user.PhoneNumber = input.PhoneNumber
+	user.Address = input.Address
 
-func (u *userUseCase) CreateNewUser(newUser *model.User) error {
-	newUser.Id = utils.GenerateId()
-	passCheck := utils.Password(newUser.Password) 
-	if len(newUser.Name) < 4 || len(newUser.Name) > 50 {
-		return errors.New("nama berisi 4-50 karakter")
-	} else if _, err := mail.ParseAddress(newUser.Email); err != nil{
-		return errors.New("format email salah, ex: user@mail.com")
- 	} else if len(newUser.PhoneNumber) < 10 || len(newUser.PhoneNumber) > 13 {
-		return errors.New("nomor telepon berisi 10-13 karakter")
-	} else if _, err := strconv.Atoi(newUser.PhoneNumber); err != nil {
-		return errors.New("nomor telepon hanya berisikan angka")
-	} else if !passCheck {
-		return errors.New("password harus kombinasi uppercase, angka, dan simbol")
+	Password, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.MinCost)
+	if err != nil {
+		return user, err
 	}
-	return u.userRepo.CreateNew(newUser)
+
+	user.Password = string(Password)
+
+	err = u.userRepo.SaveUser(&user)
+	if err != nil {
+		return user, errors.New("failed register user")
+	}
+
+	return user, nil
 }
 
-func (u *userUseCase) UpdateUser(user model.User) error {
-	passCheck := utils.Password(user.Password) 
-	if len(user.Name) < 4 || len(user.Name) > 50 {
-		return errors.New("nama berisi 4-50 karakter")
-	} else if _, err := mail.ParseAddress(user.Email); err != nil{
-		return errors.New("format email salah, ex: user@mail.com")
- 	} else if len(user.PhoneNumber) < 10 || len(user.PhoneNumber) > 13 {
-		return errors.New("nomor telepon berisi 10-13 karakter")
-	} else if _, err := strconv.Atoi(user.PhoneNumber); err != nil {
-		return errors.New("nomor telepon hanya berisikan angka")
-	} else if !passCheck {
-		return errors.New("password harus kombinasi uppercase, angka, dan simbol")
+func (u *userUseCase) Login(email string, password string) (model.User, error) {
+	var usernil = model.User{}
+	user, err := u.userRepo.FindByEmail(email)
+
+	if err != nil {
+		return usernil, err
 	}
-	return nil
+
+	if user.Id == "" {
+		return usernil, errors.New("no user found on that email")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		return usernil, errors.New("password incorrect")
+	}
+
+	if user.Email != email {
+		return usernil, errors.New("invalid email")
+	}
+
+	return user, nil
+}
+
+func (u *userUseCase) UpdateUser(update *model.User) (model.User, error) {
+	var updatedUser model.User
+	user, err := u.userRepo.GetUserById(update.Id)
+	if err != nil {
+		return updatedUser, err
+	}
+
+	user.Name = update.Name
+	user.Email = update.Email
+	user.Address = update.Address
+
+	newPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return updatedUser, err
+	}
+	user.Password = string(newPass)
+
+	err = u.userRepo.Update(user)
+	if err != nil {
+		return updatedUser, err
+	}
+
+	updatedUser = *user
+
+	return updatedUser, nil
 }
 
 func (u *userUseCase) DeleteUserById(id string) error {

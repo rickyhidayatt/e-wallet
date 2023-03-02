@@ -82,6 +82,7 @@ func (b *balanceRepository) SendBalance(userId string, amount int) error {
 func (b *balanceRepository) GetBalance(userId string) ([]int, error) {
 	var balances []model.Balances
 	var balanceInt []int
+	// var err error
 
 	err := b.db.Select(&balances, utils.CHECK_BALANCE_BY_ID, userId)
 	if err != nil {
@@ -97,7 +98,7 @@ func (b *balanceRepository) GetBalance(userId string) ([]int, error) {
 
 func (r *balanceRepository) checkUserExists(tx *sqlx.Tx, userId string) error {
 	var user []model.User
-	if err := tx.Select(&user, utils.SELECT_USER_BYID, userId); err != nil {
+	if err := tx.Select(&user, utils.USER_BY_ID, userId); err != nil {
 		return err
 	}
 
