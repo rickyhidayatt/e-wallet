@@ -4,7 +4,6 @@ import (
 	"e-wallet/config"
 	"e-wallet/delivery/controller"
 	"e-wallet/manager"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,9 +26,7 @@ func Server() *appServer {
 }
 
 func (a *appServer) initHandlers() {
-	//masukan yang mau di jalankan handlernya dari package controller
 	controller.NewTransactionController(a.engine, a.useCaseManager.TransactionUseCase())
-	fmt.Println("Eror mulai ==================================")
 	controller.NewUserController(a.engine, a.useCaseManager.UserUseCase())
 }
 
