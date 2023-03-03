@@ -10,7 +10,7 @@ import (
 type UserUseCase interface {
 	RegisterUser(input *model.UserRegister) (model.User, error)
 	Login(input model.UserLogin) (model.User, error)
-	UpdateUser(update *model.UserUpdate) (*model.User, error)
+	UpdateUser(update *model.UserUpdate) (model.User, error)
 	IsEmailAvailable(input model.CheckEmail) (bool, error)
 	SaveAvatar(id string, fileLocation string) (model.User, error)
 	DeleteUserById(id string) error
@@ -62,17 +62,17 @@ func (u *userUseCase) Login(input model.UserLogin) (model.User, error) {
 	return user, nil
 }
 
-func (u *userUseCase) UpdateUser(update *model.UserUpdate) (*model.User, error) {
+func (u *userUseCase) UpdateUser(update *model.UserUpdate) (model.User, error) {
 
 	user, err := u.userRepo.GetUserById(update.Id)
 
 	if err != nil {
-		return &model.User{}, err
+		return *user, err
 	}
 
-	if user == nil {
+	/* if user == nil {
 		return nil, errors.New("user not found")
-	}
+	} */
 
 	// update jika tabel di database gak kosong
 	if update.Name != "" {
@@ -90,7 +90,7 @@ func (u *userUseCase) UpdateUser(update *model.UserUpdate) (*model.User, error) 
 
 	updatedUser, err := u.userRepo.Update(user)
 	if err != nil {
-		return nil, err
+		return updatedUser, err
 	}
 
 	return updatedUser, nil
