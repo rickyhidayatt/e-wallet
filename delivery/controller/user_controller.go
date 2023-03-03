@@ -1,13 +1,17 @@
 package controller
 
 import (
+	"e-wallet/config"
+	"e-wallet/delivery/middleware"
 	"e-wallet/model"
 	"e-wallet/usecase"
 	"e-wallet/utils"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserController struct {
@@ -29,11 +33,38 @@ func (uc *UserController) Login(c *gin.Context) {
 	if err != nil {
 		response := utils.ApiResponse("login failed for user", http.StatusInternalServerError, "error", err.Error())
 		c.JSON(http.StatusInternalServerError, response)
-	} else {
-		response := utils.ApiResponse("successful login to your account", http.StatusOK, "success", users)
-		c.JSON(http.StatusOK, response)
+		return
 	}
 
+	// Pembuatan JWT Token
+	expTime := time.Now().Add(time.Minute * 120)
+	claims := &config.JWTClaim{
+		Email: login.Email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "REFACTOR PROJEK",
+			ExpiresAt: jwt.NewNumericDate(expTime),
+		},
+	}
+
+	tokenAlgo := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenAlgo.SignedString(config.JWT_KEY)
+	fmt.Println("INI TOKEN", token)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	cookie := &http.Cookie{
+		Name:     "token",
+		Path:     "/",
+		Value:    token,
+		HttpOnly: true,
+	}
+	http.SetCookie(c.Writer, cookie)
+
+	response := utils.ApiResponse("successful login to your account", http.StatusOK, "success", users)
+	c.JSON(http.StatusOK, response)
 }
 
 func (uc *UserController) RegisterUser(c *gin.Context) {
@@ -147,16 +178,39 @@ func (uc *UserController) UploadAvatar(c *gin.Context) {
 
 }
 
+func (uc *UserController) Logout(c *gin.Context) {
+
+	cookie := &http.Cookie{
+		Name:     "token",
+		Path:     "/",
+		Value:    "",
+		HttpOnly: true,
+		MaxAge:   -1,
+	}
+	http.SetCookie(c.Writer, cookie)
+
+	data := gin.H{
+		"message": "Bye bye",
+	}
+
+	response := utils.ApiResponse("success Logout", http.StatusOK, "error", data)
+	c.JSON(http.StatusOK, response)
+}
+
 func NewUserController(router *gin.Engine, userArg usecase.UserUseCase) *UserController {
 	userController := UserController{
 		userUseCase: userArg,
 	}
 
+	router.POST("/check-email", userController.CheckEmail)
+	router.POST("/signup", userController.RegisterUser)
+	router.POST("/login", userController.Login)
+
 	r := router.Group("api/user")
-	r.POST("/login", userController.Login)
-	r.POST("/signup", userController.RegisterUser)
+	r.Use(middleware.AuthMiddleware())
 	r.PUT("/update", userController.UpdateUser)
-	r.POST("/email/checking", userController.CheckEmail)
 	r.POST("/avatars", userController.UploadAvatar)
+	r.GET("/logout", userController.Logout)
+
 	return &userController
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"e-wallet/delivery/middleware"
 	"e-wallet/model"
 	"e-wallet/usecase"
 	"e-wallet/utils"
@@ -95,6 +96,7 @@ func NewTransactionController(router *gin.Engine, transactionArg usecase.Transac
 	}
 
 	r := router.Group("api/transaction")
+	r.Use(middleware.AuthMiddleware())
 	r.POST("/topup", trxController.TopUp)
 	r.POST("/transfer", trxController.Transfer)
 	r.POST("/request", trxController.RequestMoney)
