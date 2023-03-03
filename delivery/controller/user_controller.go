@@ -131,10 +131,10 @@ func (uc *UserController) CheckEmail(c *gin.Context) {
 		response := utils.ApiResponse("email has been registered", http.StatusOK, "success", data)
 		c.JSON(http.StatusOK, response)
 	}
-
 }
 
 func (uc *UserController) UploadAvatar(c *gin.Context) {
+	id := c.Param("id")
 	file, err := c.FormFile("avatar")
 	if err != nil {
 		data := gin.H{
@@ -145,9 +145,8 @@ func (uc *UserController) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	//save file
-	path := "images/" + file.Filename
-	err = c.SaveUploadedFile(file, path)
+	saveFormat := fmt.Sprintf("images/%s-%s", id, file.Filename)
+	err = c.SaveUploadedFile(file, saveFormat)
 	if err != nil {
 		data := gin.H{
 			"is_uploaded": false,
@@ -157,10 +156,7 @@ func (uc *UserController) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	// nanti dapet dari jwt
-	fakeId := "4e3c55684bc748b2a2b495191e4243a1"
-	// nanti dari jwt
-	_, err = uc.userUseCase.SaveAvatar(fakeId, path)
+	_, err = uc.userUseCase.SaveAvatar(id, saveFormat)
 	if err != nil {
 		data := gin.H{
 			"is_uploaded": false,
@@ -202,15 +198,15 @@ func NewUserController(router *gin.Engine, userArg usecase.UserUseCase) *UserCon
 		userUseCase: userArg,
 	}
 
-	router.POST("/check-email", userController.CheckEmail)
-	router.POST("/signup", userController.RegisterUser)
 	router.POST("/login", userController.Login)
+	router.POST("/signup", userController.RegisterUser)
+	router.POST("/check-email", userController.CheckEmail)
 
 	r := router.Group("api/user")
 	r.Use(middleware.AuthMiddleware())
 	r.PUT("/update", userController.UpdateUser)
-	r.POST("/avatars", userController.UploadAvatar)
 	r.GET("/logout", userController.Logout)
+	r.POST("/avatar/:id", userController.UploadAvatar)
 
 	return &userController
 }
