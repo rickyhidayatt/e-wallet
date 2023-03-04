@@ -14,20 +14,6 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookie, err := c.Cookie("token")
 
-		if err != nil {
-			response := utils.ApiResponse("Token not found cuy", http.StatusForbidden, "error", err.Error())
-			c.JSON(http.StatusForbidden, response)
-			c.Abort()
-			return
-		}
-
-		if err != nil {
-			response := utils.ApiResponse("Unauthorized", http.StatusUnauthorized, "error", "Token not found")
-			c.JSON(http.StatusUnauthorized, response)
-			c.Abort()
-			return
-		}
-
 		token, err := jwt.ParseWithClaims(cookie, &config.JWTClaim{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

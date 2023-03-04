@@ -41,14 +41,13 @@ func (uc *UserController) Login(c *gin.Context) {
 	claims := &config.JWTClaim{
 		Email: login.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "REFACTOR PROJEK",
+			Issuer:    "DOMPET ONLINE",
 			ExpiresAt: jwt.NewNumericDate(expTime),
 		},
 	}
 
 	tokenAlgo := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	token, err := tokenAlgo.SignedString(config.JWT_KEY)
-	fmt.Println("INI TOKEN", token)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
