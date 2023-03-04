@@ -144,10 +144,11 @@ func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) ([]mod
 		return nil, errors.New("id not found")
 	}
 
-	if len(trxHistory) == 0 {
+	// Don't need second validation, already check valid by id
+	/* if len(trxHistory) == 0 {
 		return nil, errors.New("not found transaction data for user")
-	}
-
+	} */
+	
 	transactionsHistory = append(transactionsHistory, trxHistory...)
 	return transactionsHistory, nil
 }
