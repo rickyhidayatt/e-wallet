@@ -200,7 +200,7 @@ func (tx *transactionUseCase) GetBonus(userId string) error {
 
 	now := time.Now()
 	if user.BirthDate.Month() == now.Month() && user.BirthDate.Day() == now.Day() {
-		tx.balanceRepo.AddBalance(userId, 2000)
+		tx.balanceRepo.AddBalance(userId, 25000)
 	} else {
 		return errors.New("we're sorry, but it's not your birthday yet. Please be patient :)")
 	}

@@ -92,13 +92,14 @@ func (tc *TransactionController) PrintTransactionHistory(c *gin.Context) {
 
 func (tc *TransactionController) GiftBirthDay(c *gin.Context) {
 	id := c.Param("id")
+
 	err := tc.transactionUseCase.GetBonus(id)
 	if err != nil {
 		response := utils.ApiResponse("server error", http.StatusBadRequest, "error", err.Error())
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	message := "you receive a cash prize from an online wallet "
+	message := "You receive a cash prize of IDR 25,000 from an online wallet"
 	response := utils.ApiResponse("Happy BirthDay", http.StatusOK, "success", message)
 	c.JSON(http.StatusOK, response)
 
