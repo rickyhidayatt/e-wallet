@@ -14,6 +14,7 @@ type TransactionUseCase interface {
 	SendMoney(req model.TransactionSend) (*model.Transfer, error)
 	PrintHistoryTransactionsById(userId string) ([]model.TransactionReceiver, error)
 	RequestMoney(req model.TransactionRequest) (model.Transaction, error)
+	GetBonus(userId string) error
 }
 
 type transactionUseCase struct {
@@ -187,6 +188,23 @@ func (tx *transactionUseCase) RequestMoney(req model.TransactionRequest) (model.
 	}
 
 	return transaction, nil
+}
+
+func (tx *transactionUseCase) GetBonus(userId string) error {
+	user, err := tx.userRepo.GetUserById(userId)
+	if err != nil {
+		return err
+	} else if user == nil {
+		return errors.New("id not found")
+	}
+
+	now := time.Now()
+	if user.BirthDate.Month() == now.Month() && user.BirthDate.Day() == now.Day() {
+		tx.balanceRepo.AddBalance(userId, 2000)
+	} else {
+		return errors.New("we're sorry, but it's not your birthday yet. Please be patient :)")
+	}
+	return nil
 }
 
 func NewTransactionUseCase(tx repository.TransactionRepository, usr repository.UserRepository, blc repository.BalanceRepository, rcv repository.ReceiverRepository) TransactionUseCase {

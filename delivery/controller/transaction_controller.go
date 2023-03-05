@@ -90,6 +90,20 @@ func (tc *TransactionController) PrintTransactionHistory(c *gin.Context) {
 	}
 }
 
+func (tc *TransactionController) GiftBirthDay(c *gin.Context) {
+	id := c.Param("id")
+	err := tc.transactionUseCase.GetBonus(id)
+	if err != nil {
+		response := utils.ApiResponse("server error", http.StatusBadRequest, "error", err.Error())
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	message := "you receive a cash prize from an online wallet "
+	response := utils.ApiResponse("Happy BirthDay", http.StatusOK, "success", message)
+	c.JSON(http.StatusOK, response)
+
+}
+
 func NewTransactionController(router *gin.Engine, transactionArg usecase.TransactionUseCase) *TransactionController {
 	trxController := TransactionController{
 		transactionUseCase: transactionArg,
@@ -97,6 +111,7 @@ func NewTransactionController(router *gin.Engine, transactionArg usecase.Transac
 
 	r := router.Group("api/transaction")
 	r.Use(middleware.AuthMiddleware())
+	r.GET("/:id/gift", trxController.GiftBirthDay)
 	r.POST("/topup", trxController.TopUp)
 	r.POST("/transfer", trxController.Transfer)
 	r.POST("/request", trxController.RequestMoney)

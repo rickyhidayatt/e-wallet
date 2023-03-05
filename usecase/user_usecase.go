@@ -30,6 +30,7 @@ func (u *userUseCase) RegisterUser(input *model.UserRegister) (model.User, error
 	user.Address = input.Address
 	user.Password = input.Password
 	user.CreatedAt = time.Now()
+	user.BirthDate = input.BirthDate
 
 	err := u.userRepo.SaveUser(&user)
 	if err != nil {
