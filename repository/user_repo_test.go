@@ -110,8 +110,6 @@ func (suite *UserRepositoryTestSuite) TestUpdate_Success() {
 	dummyUser := dummyUsers[0]
 	query := `UPDATE users SET name=\?, email=\?, phone_number=\?, password=\?, address=\?, birth_date=\?, profile_picture=\?, update_at=\? WHERE id=\?`
 	suite.mockSql.ExpectExec(query).WithArgs(dummyUser.Name, dummyUser.Email, dummyUser.PhoneNumber, dummyUser.Password, dummyUser.Address, dummyUser.BirthDate, dummyUser.ProfilePicture, dummyUser.UpdateAt, dummyUser.Id).WillReturnResult(driver.RowsAffected(1))
-	(sqlmock.NewResult(1, 1))
-	suite.mockSql.ExpectQuery("SELECT * FROM users WHERE id=$1").WithArgs(dummyUser.Id)
 	repo := NewUserRepository(suite.mockDb)
 	actual, err := repo.Update(&dummyUser)
 	assert.Nil(suite.T(), err)
