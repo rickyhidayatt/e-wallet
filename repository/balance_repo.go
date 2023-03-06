@@ -32,7 +32,7 @@ func (b *balanceRepository) SaveNewBalance(balance model.Balances) error {
 func (b *balanceRepository) AddBalance(userId string, amount int) error {
 	var err error
 
-	//rolback jika ada kesalahan
+	//rollback
 	err = b.runTransaction(func(tx *sqlx.Tx) error {
 		if err = b.checkUserExists(tx, userId); err != nil {
 			log.Fatal(err)
@@ -58,7 +58,7 @@ func (b *balanceRepository) AddBalance(userId string, amount int) error {
 func (b *balanceRepository) SendBalance(userId string, amount int) error {
 	var err error
 
-	//rolback jika ada kesalahan
+	//rollback
 	err = b.runTransaction(func(tx *sqlx.Tx) error {
 		if err = b.checkUserExists(tx, userId); err != nil {
 			return err
@@ -82,7 +82,6 @@ func (b *balanceRepository) SendBalance(userId string, amount int) error {
 func (b *balanceRepository) GetBalance(userId string) ([]int, error) {
 	var balances []model.Balances
 	var balanceInt []int
-	// var err error
 
 	err := b.db.Select(&balances, utils.CHECK_BALANCE_BY_ID, userId)
 	if err != nil {

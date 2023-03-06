@@ -21,11 +21,12 @@ type UserLogin struct {
 }
 
 type UserRegister struct {
-	Name        string `json:"name" binding:"required"`
-	Email       string `json:"email" binding:"required,email"`
-	Password    string `json:"password" binding:"required"`
-	PhoneNumber string `json:"phone_number" binding:"required"`
-	Address     string `json:"address" binding:"required"`
+	Name        string    `json:"name" binding:"required"`
+	Email       string    `json:"email" binding:"required,email"`
+	Password    string    `json:"password" binding:"required"`
+	PhoneNumber string    `json:"phone_number" binding:"required"`
+	Address     string    `json:"address" binding:"required"`
+	BirthDate   time.Time `json:"birth_date" time_format:"2006-01-02"`
 }
 
 type UserUpdate struct {
