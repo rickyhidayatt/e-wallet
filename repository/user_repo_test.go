@@ -130,14 +130,6 @@ func (suite *UserRepositoryTestSuite) TestSaveAvatar_Success() {
 	assert.NotNil(suite.T(), actual)
 } // This method has not passed unit test
 
-func (suite *UserRepositoryTestSuite) TestDeleteById() {
-	dummyUser := dummyUsers[0]
-	suite.mockSql.ExpectExec("DELETE FROM users WHERE id = $1").WithArgs(dummyUser.Id)
-	repo := NewUserRepository(suite.mockDb)
-	err := repo.DeleteById(dummyUser.Id)
-	assert.Nil(suite.T(), err)
-} // This method has not passed unit test
-
 func TestUserRepositoryTestSuite(t *testing.T) {
 	suite.Run(t, new(UserRepositoryTestSuite))
 }

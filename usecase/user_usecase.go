@@ -5,6 +5,7 @@ import (
 	"e-wallet/repository"
 	"e-wallet/utils"
 	"errors"
+	"time"
 )
 
 type UserUseCase interface {
@@ -13,7 +14,6 @@ type UserUseCase interface {
 	UpdateUser(update *model.UserUpdate) (model.User, error)
 	IsEmailAvailable(input model.CheckEmail) (bool, error)
 	SaveAvatar(id string, fileLocation string) (model.User, error)
-	DeleteUserById(id string) error
 }
 
 type userUseCase struct {
@@ -29,6 +29,8 @@ func (u *userUseCase) RegisterUser(input *model.UserRegister) (model.User, error
 	user.PhoneNumber = input.PhoneNumber
 	user.Address = input.Address
 	user.Password = input.Password
+	user.CreatedAt = time.Now()
+	user.BirthDate = input.BirthDate
 
 	err := u.userRepo.SaveUser(&user)
 	if err != nil {
@@ -74,7 +76,6 @@ func (u *userUseCase) UpdateUser(update *model.UserUpdate) (model.User, error) {
 		return nil, errors.New("user not found")
 	} */
 
-	// update jika tabel di database gak kosong
 	if update.Name != "" {
 		user.Name = update.Name
 	}
@@ -87,6 +88,8 @@ func (u *userUseCase) UpdateUser(update *model.UserUpdate) (model.User, error) {
 	if update.Password != "" {
 		user.Password = update.Password
 	}
+
+	user.UpdateAt = time.Now()
 
 	updatedUser, err := u.userRepo.Update(user)
 	if err != nil {
@@ -120,18 +123,12 @@ func (u *userUseCase) SaveAvatar(id string, fileLocation string) (model.User, er
 	}
 
 	user.ProfilePicture = fileLocation
-
 	updateUser, err := u.userRepo.SaveAvatar(user)
 	if err != nil {
 		return updateUser, err
 	}
 
 	return updateUser, nil
-}
-
-func (u *userUseCase) DeleteUserById(id string) error {
-
-	return u.userRepo.DeleteById(id)
 }
 
 func NewUserUseCase(userRepository repository.UserRepository) UserUseCase {

@@ -11,7 +11,6 @@ type UserRepository interface {
 	GetUserById(id string) (*model.User, error)
 	SaveUser(newUser *model.User) error
 	Update(user *model.User) (model.User, error)
-	DeleteById(id string) error
 	FindByEmail(email string) (model.User, error)
 	SaveAvatar(user *model.User) (model.User, error)
 }
@@ -78,14 +77,6 @@ func (u *userRepository) SaveAvatar(user *model.User) (model.User, error) {
 
 	return updatedUser, nil
 
-}
-
-func (u *userRepository) DeleteById(id string) error {
-	_, err := u.db.Exec(utils.DELETE_USER_BYID, id)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func NewUserRepository(db *sqlx.DB) UserRepository {

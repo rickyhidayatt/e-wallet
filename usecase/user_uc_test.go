@@ -55,14 +55,6 @@ func (repo *userRepoMock) SaveAvatar(user *model.User) (model.User, error) {
 	return model.User{}, nil
 }
 
-func (repo *userRepoMock) DeleteById(id string) error {
-	args := repo.Called(id)
-	if args[0] != nil {
-		return args.Error(0)
-	}
-	return nil
-}
-
 type UserUseCaseTestSuite struct {
 	repoMock *userRepoMock
 	suite.Suite
@@ -91,26 +83,6 @@ func (suite *UserUseCaseTestSuite) TestIsEmailAvailable_Failed() {
 	suite.repoMock.On("FindByEmail", dummyUserEmailRepo.Email).Return(errors.New("Failed"))
 	userUseCase := NewUserUseCase(suite.repoMock)
 	_, err := userUseCase.IsEmailAvailable(dummyUserEmail)
-	assert.NotNil(suite.T(), err)
-} // This method has passed unit test
-
-func (suite *UserUseCaseTestSuite) TestDeleteUserById_Success() {
-	var dummyUserDelete = model.User{
-		Id: utils.GenerateId(),
-	}
-	suite.repoMock.On("DeleteById", dummyUserDelete.Id).Return(nil)
-	userUseCase := NewUserUseCase(suite.repoMock)
-	err := userUseCase.DeleteUserById(dummyUserDelete.Id)
-	assert.Nil(suite.T(), err)
-} // This method has passed unit test
-
-func (suite *UserUseCaseTestSuite) TestDeleteUserById_Failed() {
-	var dummyUserDelete = model.User{
-		Id: utils.GenerateId(),
-	}
-	suite.repoMock.On("DeleteById", dummyUserDelete.Id).Return(errors.New("Failed"))
-	userUseCase := NewUserUseCase(suite.repoMock)
-	err := userUseCase.DeleteUserById(dummyUserDelete.Id)
 	assert.NotNil(suite.T(), err)
 } // This method has passed unit test
 
