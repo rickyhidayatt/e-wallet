@@ -124,7 +124,7 @@ func (suite *UserUseCaseTestSuite) TestLogin_Success() {
 		Email: dummyUserLogin.Email,
 		Password: dummyUserLogin.Password,
 	}
-	suite.repoMock.On("FindByEmail", dummyUser).Return(nil)
+	suite.repoMock.On("FindByEmail", dummyUser.Email).Return(nil)
 	userUseCase := NewUserUseCase(suite.repoMock)
 	_, err := userUseCase.Login(dummyUserLogin)
 	assert.Nil(suite.T(), err)
