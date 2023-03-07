@@ -168,7 +168,7 @@ func (uc *UserController) UploadAvatar(c *gin.Context) {
 	data := gin.H{
 		"is_uploaded": true,
 	}
-	response := utils.ApiResponse("success uploaded avatar", http.StatusOK, "error", data)
+	response := utils.ApiResponse("success uploaded avatar", http.StatusOK, "success", data)
 	c.JSON(http.StatusOK, response)
 
 }
@@ -188,7 +188,7 @@ func (uc *UserController) Logout(c *gin.Context) {
 		"message": "Bye bye",
 	}
 
-	response := utils.ApiResponse("success Logout", http.StatusOK, "error", data)
+	response := utils.ApiResponse("success Logout", http.StatusOK, "logut", data)
 	c.JSON(http.StatusOK, response)
 }
 

@@ -136,9 +136,6 @@ func (tx *transactionUseCase) SendMoney(req model.TransactionSend) (*model.Trans
 
 func (tx *transactionUseCase) PrintHistoryTransactionsById(userId string) ([]model.TransactionReceiver, error) {
 	var transactionsHistory []model.TransactionReceiver
-	if userId == "" {
-		return nil, errors.New("fill in your user id")
-	}
 
 	trxHistory, err := tx.transactionRepo.PrintHistoryTransactions(userId)
 	if err != nil {

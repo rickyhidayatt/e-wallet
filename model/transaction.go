@@ -7,7 +7,7 @@ type Transaction struct {
 	UserId          string    `db:"user_id" json:"user_id" binding:"required"`
 	TransactionDate time.Time `db:"transaction_date"`
 	TransactionType string    `db:"transaction_type"`
-	Amount          int       `db:"amount"`
+	Amount          int       `db:"amount" json:"amount"`
 	ReciverId       string    `db:"receiver_id"`
 	Category        string    `db:"category"`
 }
