@@ -3,6 +3,7 @@ package repository
 import (
 	"e-wallet/model"
 	"e-wallet/utils"
+	"errors"
 	"log"
 	"testing"
 
@@ -53,12 +54,23 @@ func (suite *ReceiverRepositoryTestSuite) TestGetReceiverById_Success() {
 	dummyReceiver := dummyReceivers[0]
 	rows := sqlmock.NewRows([]string{"id", "user_id", "name", "bank_name", "account_number"})
 	rows.AddRow(dummyReceiver.Id, dummyReceiver.UserId, dummyReceiver.Name, dummyReceiver.BankName, dummyReceiver.AccountNumber)
-	suite.mockSql.ExpectQuery("SELECT * FROM receivers WHERE id = $1").WillReturnRows(rows)
+	suite.mockSql.ExpectQuery("SELECT * FROM receivers WHERE id = $1").WithArgs(dummyReceiver.Id).WillReturnRows(rows)
 	repo := NewReceiverRepository(suite.mockDb)
 	actual, err := repo.GetReceiverById(dummyReceiver.Id)
 	assert.Nil(suite.T(), err)
 	assert.NotNil(suite.T(), actual)
 } // This method has not passed unit test
+
+func (suite *ReceiverRepositoryTestSuite) TestGetReceiverById_Failed() {
+	dummyReceiver := dummyReceivers[0]
+	rows := sqlmock.NewRows([]string{"id", "user_id", "name", "bank_name", "account_number"})
+	rows.AddRow(dummyReceiver.Id, dummyReceiver.UserId, dummyReceiver.Name, dummyReceiver.BankName, dummyReceiver.AccountNumber)
+	suite.mockSql.ExpectQuery("SELECT * FROM receivers WHERE id = $1").WithArgs(dummyReceiver.Id).WillReturnError(errors.New("failed"))
+	repo := NewReceiverRepository(suite.mockDb)
+	_, err := repo.GetReceiverById(dummyReceiver.Id)
+	assert.Error(suite.T(), err)
+	assert.Equal(suite.T(), errors.New("id receiver not found"), err)
+} // This method has passed unit test
 
 func TestReceiverRepositoryTestSuite(t *testing.T) {
 	suite.Run(t, new(ReceiverRepositoryTestSuite))

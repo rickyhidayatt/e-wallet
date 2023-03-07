@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bytes"
 	"e-wallet/model"
 	"e-wallet/utils"
 	"encoding/json"
@@ -27,6 +28,41 @@ var dummyUsers = []model.User{
 		ProfilePicture: "DummyImage01",
 		CreatedAt: time.Date(2010, time.December, 1, 1, 1, 1, 1, time.UTC),
 		UpdateAt: time.Date(2010, time.December, 1, 1, 1, 1, 1, time.UTC),
+	},
+}
+
+var dummyUserLogin = []model.UserLogin{
+	{
+		Email: dummyUsers[0].Email,
+		Password: dummyUsers[0].Password,
+	},
+}
+
+var dummyUserRegister = []model.UserRegister{
+	{
+		Name: dummyUsers[0].Name,
+		Email: dummyUsers[0].Email,
+		Password: dummyUsers[0].Password,
+		PhoneNumber: dummyUsers[0].PhoneNumber,
+		Address: dummyUsers[0].Address,
+		BirthDate: dummyUsers[0].BirthDate,
+	},
+}
+
+var dummyUserUpdate = []model.UserUpdate{
+	{
+		Id: dummyUsers[0].Id,
+		Name: dummyUsers[0].Name,
+		Email: dummyUsers[0].Email,
+		Password: dummyUsers[0].Password,
+		PhoneNumber: dummyUsers[0].PhoneNumber,
+		Address: dummyUsers[0].Address,
+	},
+}
+
+var dummyCheckEmail = []model.CheckEmail{
+	{
+		Email: dummyUsers[0].Email,
 	},
 }
 
@@ -86,20 +122,97 @@ func (c *UserUseCaseMock) SaveAvatar(id string, fileLocation string) (model.User
 }
 
 func (suite *UserControllerTestSuite) TestLogin_Success() {
-	users := dummyUsers
-	suite.useCaseMock.On("Login").Return(users, nil)
+	user := dummyUsers
+	login := dummyUserLogin
+	suite.useCaseMock.On("Login", login).Return(&user, nil)
 	NewUserController(suite.routerMock, suite.useCaseMock)
-	// ini baru kondisikan HTTP Status
 	r := httptest.NewRecorder()
-	// request test yang sesuai
-	request, err := http.NewRequest(http.MethodGet, "/customer", nil)
+	request, err := http.NewRequest(http.MethodPost, "/login", nil)
 	suite.routerMock.ServeHTTP(r, request)
-	var actualUsers []model.User
+	var actualUser []model.User
 	response := r.Body.String()
-	json.Unmarshal([]byte(response), &actualUsers)
+	json.Unmarshal([]byte(response), &actualUser)
 	assert.Equal(suite.T(), http.StatusOK, r.Code)
-	assert.Equal(suite.T(), 1, len(actualUsers))
-	assert.Equal(suite.T(), users[0].Name, actualUsers[0].Name)
+	assert.Equal(suite.T(), 1, len(actualUser))
+	assert.Equal(suite.T(), user[0].Name, actualUser[0].Name)
+	assert.Nil(suite.T(), err)
+}
+
+func (suite *UserControllerTestSuite) TestRegisterUser_Success() {
+	newUser := dummyUserRegister[0]
+	user := dummyUsers[0]
+	suite.useCaseMock.On("RegisterUser", &newUser).Return(nil)
+	NewUserController(suite.routerMock, suite.useCaseMock)
+	r := httptest.NewRecorder()
+	reqBody, _ := json.Marshal(newUser)
+	request, _ := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer(reqBody))
+	suite.routerMock.ServeHTTP(r, request)
+	response := r.Body.String()
+	var actualUser model.User
+	json.Unmarshal([]byte(response), &actualUser)
+	assert.Equal(suite.T(), http.StatusOK, r.Code)
+	assert.Equal(suite.T(), user.Name, actualUser.Name)
+}
+
+func (suite *UserControllerTestSuite) TestUpdateUser_Success() {
+	userUpdate := dummyUserUpdate[0]
+	user := dummyUsers[0]
+	suite.useCaseMock.On("UpdateUser", &userUpdate).Return(&user, nil)
+	NewUserController(suite.routerMock, suite.useCaseMock)
+	r := httptest.NewRecorder()
+	reqBody, _ := json.Marshal(userUpdate)
+	request, _ := http.NewRequest(http.MethodPut, "api/user/update", bytes.NewBuffer(reqBody))
+	suite.routerMock.ServeHTTP(r, request)
+	response := r.Body.String()
+	var actualUser model.User
+	json.Unmarshal([]byte(response), &actualUser)
+	assert.Equal(suite.T(), http.StatusOK, r.Code)
+	assert.Equal(suite.T(), user.Name, actualUser.Name)
+}
+
+func (suite *UserControllerTestSuite) TestCheckEmail_Success() {
+	user := dummyUsers
+	email := dummyCheckEmail
+	suite.useCaseMock.On("CheckEmail", email).Return(true, nil)
+	NewUserController(suite.routerMock, suite.useCaseMock)
+	r := httptest.NewRecorder()
+	request, err := http.NewRequest(http.MethodPost, "/check-email", nil)
+	suite.routerMock.ServeHTTP(r, request)
+	var actualUser []model.User
+	response := r.Body.String()
+	json.Unmarshal([]byte(response), &actualUser)
+	assert.Equal(suite.T(), http.StatusOK, r.Code)
+	assert.Equal(suite.T(), 1, len(actualUser))
+	assert.Equal(suite.T(), user[0].Email, actualUser[0].Email)
+	assert.Nil(suite.T(), err)
+}
+
+func (suite *UserControllerTestSuite) TestUploadAvatar_Success() {
+	id := dummyUsers[0].Id
+	saveFormat := dummyUsers[0].ProfilePicture
+	user := dummyUsers[0]
+	suite.useCaseMock.On("UploadAvatar", &id, &saveFormat).Return(nil)
+	NewUserController(suite.routerMock, suite.useCaseMock)
+	r := httptest.NewRecorder()
+	reqBody, _ := json.Marshal(&user)
+	request, _ := http.NewRequest(http.MethodPost, "api/user/avatar/:id", bytes.NewBuffer(reqBody))
+	suite.routerMock.ServeHTTP(r, request)
+	response := r.Body.String()
+	var actualUser model.User
+	json.Unmarshal([]byte(response), &actualUser)
+	assert.Equal(suite.T(), http.StatusOK, r.Code)
+	assert.Equal(suite.T(), user.ProfilePicture, actualUser.ProfilePicture)
+}
+
+func (suite *UserControllerTestSuite) TestLogout_Success() {
+	NewUserController(suite.routerMock, suite.useCaseMock)
+	r := httptest.NewRecorder()
+	request, err := http.NewRequest(http.MethodGet, "api/user/logout", nil)
+	suite.routerMock.ServeHTTP(r, request)
+	var actualUser []model.User
+	response := r.Body.String()
+	json.Unmarshal([]byte(response), &actualUser)
+	assert.Equal(suite.T(), http.StatusOK, r.Code)
 	assert.Nil(suite.T(), err)
 }
 

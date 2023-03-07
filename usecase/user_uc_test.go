@@ -60,6 +60,148 @@ type UserUseCaseTestSuite struct {
 	suite.Suite
 }
 
+func (suite *UserUseCaseTestSuite) TestRegisterUser_Success() {
+	var dummyUserInput = model.UserRegister{
+		Name: "DummyUser01",
+		Email: "dummy-email@mail.com",
+		PhoneNumber: "098712345678",
+		Password: "DummyPass*123",
+		Address: "Jl. Dummy No. 25",
+		BirthDate: time.Date(1990, time.January, 1, 1, 1, 1, 1, time.UTC),
+	}
+	var dummyNewUser = model.User{
+		Id: utils.GenerateId(),
+		Name: dummyUserInput.Name,
+		Email: dummyUserInput.Email,
+		PhoneNumber: dummyUserInput.PhoneNumber,
+		Password: dummyUserInput.Password,
+		Address: dummyUserInput.Address,
+		BirthDate: dummyUserInput.BirthDate,
+		ProfilePicture: "DummyImage",
+		CreatedAt: time.Now(),
+		UpdateAt: time.Date(0, time.January, 0, 0, 0, 0, 0, time.UTC),
+	}
+	suite.repoMock.On("SaveUser", &dummyNewUser).Return(nil)
+	userUseCase := NewUserUseCase(suite.repoMock)
+	_, err := userUseCase.RegisterUser(&dummyUserInput)
+	assert.Nil(suite.T(), err)
+} // This method has not passed unit test
+
+func (suite *UserUseCaseTestSuite) TestRegisterUser_Failed() {
+	var dummyUserInput = model.UserRegister{
+		Name: "DummyUser01",
+		Email: "dummy-email@mail.com",
+		PhoneNumber: "098712345678",
+		Password: "DummyPass*123",
+		Address: "Jl. Dummy No. 25",
+		BirthDate: time.Date(1990, time.January, 1, 1, 1, 1, 1, time.UTC),
+	}
+	var dummyNewUser = model.User{
+		Id: utils.GenerateId(),
+		Name: dummyUserInput.Name,
+		Email: dummyUserInput.Email,
+		PhoneNumber: dummyUserInput.PhoneNumber,
+		Password: dummyUserInput.Password,
+		Address: dummyUserInput.Address,
+		BirthDate: dummyUserInput.BirthDate,
+		ProfilePicture: "DummyImage",
+		CreatedAt: time.Now(),
+		UpdateAt: time.Date(0, time.January, 0, 0, 0, 0, 0, time.UTC),
+	}
+	suite.repoMock.On("SaveUser", &dummyNewUser).Return(errors.New("Failed"))
+	userUseCase := NewUserUseCase(suite.repoMock)
+	_, err := userUseCase.RegisterUser(&dummyUserInput)
+	assert.NotNil(suite.T(), err)
+} // This method has not passed unit test
+
+func (suite *UserUseCaseTestSuite) TestLogin_Success() {
+	var dummyUser = model.User{
+		Id: utils.GenerateId(),
+		Email: "dummy-email@mail.com",
+		Password: "DummyPass*123",
+	}
+	suite.repoMock.On("FindByEmail", dummyUser.Email).Return(nil)
+	var dummyUserLogin = model.UserLogin{
+		Email: dummyUser.Email,
+		Password: dummyUser.Password,
+	}
+	userUseCase := NewUserUseCase(suite.repoMock)
+	_, err := userUseCase.Login(dummyUserLogin)
+	assert.Nil(suite.T(), err)
+} // This method has not passed unit test
+
+func (suite *UserUseCaseTestSuite) TestLogin_Failed() {
+	var dummyUser = model.User{
+		Id: utils.GenerateId(),
+		Email: "dummy-email@mail.com",
+		Password: "DummyPass*123",
+	}
+	suite.repoMock.On("FindByEmail", dummyUser.Email).Return(errors.New("Failed"))
+	var dummyUserLogin = model.UserLogin{
+		Email: dummyUser.Email,
+		Password: dummyUser.Password,
+	}
+	userUseCase := NewUserUseCase(suite.repoMock)
+	_, err := userUseCase.Login(dummyUserLogin)
+	assert.NotNil(suite.T(), err)
+} // This method has passed unit test
+
+func (suite *UserUseCaseTestSuite) TestUpdateUser_Success() {
+	var dummyLastUser = model.User{
+		Id: utils.GenerateId(),
+		Name: "DummyUser01",
+		Email: "dummy-email@mail.com",
+		PhoneNumber: "098712345678",
+		Password: "DummyPass*123",
+		Address: "Jl. Dummy No. 25",
+		BirthDate: time.Date(1990, time.January, 1, 1, 1, 1, 1, time.UTC),
+		ProfilePicture: "DummyImage",
+		CreatedAt: time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC),
+		UpdateAt: time.Now(),
+	}
+	suite.repoMock.On("GetUserById", dummyLastUser.Id).Return(nil)
+	var dummyUpdatedUser = model.UserUpdate{
+		Id: dummyLastUser.Id,
+		Name: dummyLastUser.Name,
+		Email: dummyLastUser.Email,
+		PhoneNumber: dummyLastUser.PhoneNumber,
+		Password: dummyLastUser.Password,
+		Address: dummyLastUser.Address,
+	}
+	suite.repoMock.On("Update", &dummyLastUser).Return(nil)
+	userUseCase := NewUserUseCase(suite.repoMock)
+	_, err := userUseCase.UpdateUser(&dummyUpdatedUser)
+	assert.Nil(suite.T(), err)	
+} // This method has not passed unit test
+
+func (suite *UserUseCaseTestSuite) TestUpdateUser_Failed() {
+	var dummyLastUser = model.User{
+		Id: utils.GenerateId(),
+		Name: "DummyUser01",
+		Email: "dummy-email@mail.com",
+		PhoneNumber: "098712345678",
+		Password: "DummyPass*123",
+		Address: "Jl. Dummy No. 25",
+		BirthDate: time.Date(1990, time.January, 1, 1, 1, 1, 1, time.UTC),
+		ProfilePicture: "DummyImage",
+		CreatedAt: time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC),
+		UpdateAt: time.Now(),
+	}
+	suite.repoMock.On("GetUserById", dummyLastUser.Id).Return(nil)
+	var dummyUpdatedUser = model.UserUpdate{
+		Id: dummyLastUser.Id,
+		Name: dummyLastUser.Name,
+		Email: dummyLastUser.Email,
+		PhoneNumber: dummyLastUser.PhoneNumber,
+		Password: dummyLastUser.Password,
+		Address: dummyLastUser.Address,
+	}
+	suite.repoMock.On("Update", &dummyLastUser).Return(errors.New("Failed"))
+	userUseCase := NewUserUseCase(suite.repoMock)
+	_, err := userUseCase.UpdateUser(&dummyUpdatedUser)
+	assert.NotNil(suite.T(), err)	
+} // This method has not passed unit test
+
 func (suite *UserUseCaseTestSuite) TestIsEmailAvailable_Success() {
 	var dummyUserEmail = model.CheckEmail{
 		Email: "dummy-email@mail.com",
@@ -86,78 +228,6 @@ func (suite *UserUseCaseTestSuite) TestIsEmailAvailable_Failed() {
 	assert.NotNil(suite.T(), err)
 } // This method has passed unit test
 
-func (suite *UserUseCaseTestSuite) TestLogin_Success() {
-	var dummyUserLogin = model.UserLogin{
-		Email: "dummy-email@mail.com",
-		Password: "DummyPass*123",
-	}
-	var dummyUser = model.User{
-		Id: utils.GenerateId(),
-		Email: dummyUserLogin.Email,
-		Password: dummyUserLogin.Password,
-	}
-	suite.repoMock.On("FindByEmail", dummyUser.Email).Return(nil)
-	userUseCase := NewUserUseCase(suite.repoMock)
-	_, err := userUseCase.Login(dummyUserLogin)
-	assert.Nil(suite.T(), err)
-} // This method has not passed unit test
-
-func (suite *UserUseCaseTestSuite) TestUpdateUser_Success() {
-	var dummyLastUser = model.User{
-		Id: utils.GenerateId(),
-		Name: "DummyUser01",
-		Email: "dummy-email@mail.com",
-		PhoneNumber: "098712345678",
-		Password: "DummyPass*123",
-		Address: "Jl. Dummy No. 25",
-		BirthDate: time.Date(1990, time.January, 1, 1, 1, 1, 1, time.UTC),
-		ProfilePicture: "DummyImage",
-		CreatedAt: time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC),
-		UpdateAt: time.Now(),
-	}
-	var dummyUpdatedUser = model.UserUpdate{
-		Id: dummyLastUser.Id,
-		Name: dummyLastUser.Name,
-		Email: dummyLastUser.Email,
-		PhoneNumber: dummyLastUser.PhoneNumber,
-		Password: dummyLastUser.Password,
-		Address: dummyLastUser.Address,
-	}
-	suite.repoMock.On("GetUserById", dummyLastUser.Id).Return(nil)
-	suite.repoMock.On("Update", dummyUpdatedUser).Return(nil)
-	userUseCase := NewUserUseCase(suite.repoMock)
-	_, err := userUseCase.UpdateUser(&dummyUpdatedUser)
-	assert.Nil(suite.T(), err)	
-} // This method has not passed unit test
-
-func (suite *UserUseCaseTestSuite) TestSaveUser_Success() {
-	var dummyUserInput = model.UserRegister{
-		Name: "DummyUser01",
-		Email: "dummy-email@mail.com",
-		PhoneNumber: "098712345678",
-		Password: "DummyPass*123",
-		Address: "Jl. Dummy No. 25",
-	}
-
-	var dummyNewUser = model.User{
-		Id: utils.GenerateId(),
-		Name: dummyUserInput.Name,
-		Email: dummyUserInput.Email,
-		PhoneNumber: dummyUserInput.PhoneNumber,
-		Password: dummyUserInput.Password,
-		Address: dummyUserInput.Address,
-		BirthDate: time.Date(1990, time.January, 1, 1, 1, 1, 1, time.UTC),
-		ProfilePicture: "DummyImage",
-		CreatedAt: time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC),
-		UpdateAt: time.Date(0, time.January, 0, 0, 0, 0, 0, time.UTC),
-	}
-	
-	suite.repoMock.On("SaveUser", &dummyNewUser).Return(nil)
-	userUseCase := NewUserUseCase(suite.repoMock)
-	_, err := userUseCase.RegisterUser(&dummyUserInput)
-	assert.Nil(suite.T(), err)
-} // This method has not passed unit test
-
 func (suite *UserUseCaseTestSuite) TestSaveAvatar_Success() {
 	var dummyUserAvatar = model.User{
 		Id: utils.GenerateId(),
@@ -172,9 +242,30 @@ func (suite *UserUseCaseTestSuite) TestSaveAvatar_Success() {
 		UpdateAt: time.Now(),
 	}
 	suite.repoMock.On("GetUserById", dummyUserAvatar.Id).Return(nil)
+	suite.repoMock.On("SaveAvatar", &dummyUserAvatar).Return(nil)
 	userUseCase := NewUserUseCase(suite.repoMock)
 	_, err := userUseCase.SaveAvatar(dummyUserAvatar.Id, dummyUserAvatar.ProfilePicture)
 	assert.Nil(suite.T(), err)
+} // This method has not passed unit test
+
+func (suite *UserUseCaseTestSuite) TestSaveAvatar_Failed() {
+	var dummyUserAvatar = model.User{
+		Id: utils.GenerateId(),
+		Name: "DummyUser01",
+		Email: "dummy-email@mail.com",
+		PhoneNumber: "098712345678",
+		Password: "DummyPass*123",
+		Address: "Jl. Dummy No. 25",
+		BirthDate: time.Date(1990, time.January, 1, 1, 1, 1, 1, time.UTC),
+		ProfilePicture: "DummyImage",
+		CreatedAt: time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC),
+		UpdateAt: time.Now(),
+	}
+	suite.repoMock.On("GetUserById", dummyUserAvatar.Id).Return()
+	suite.repoMock.On("SaveAvatar", &dummyUserAvatar).Return(errors.New("Failed"))
+	userUseCase := NewUserUseCase(suite.repoMock)
+	_, err := userUseCase.SaveAvatar(dummyUserAvatar.Id, dummyUserAvatar.ProfilePicture)
+	assert.NotNil(suite.T(), err)
 } // This method has not passed unit test
 
 func (suite *UserUseCaseTestSuite) SetupTest() {
