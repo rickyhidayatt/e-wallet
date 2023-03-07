@@ -226,7 +226,7 @@ func (suite *TransactionUseCaseTestSuite) TestSendMoney_Failed() {
 	transactionUseCase := NewTransactionUseCase(suite.trxRepoMock, suite.usrRepoMock, suite.blcRepoMock, suite.rcvRepoMock)
 	_, err := transactionUseCase.SendMoney(dummyUserTrxSend)
 	assert.NotNil(suite.T(), err)
-} // This has not passed unit test
+}
 
 func (suite *TransactionUseCaseTestSuite) TestTopUp_Success() {
 	var dummyUser = model.User{
@@ -243,7 +243,7 @@ func (suite *TransactionUseCaseTestSuite) TestTopUp_Success() {
 	transactionUseCase := NewTransactionUseCase(suite.trxRepoMock, suite.usrRepoMock, suite.blcRepoMock, suite.rcvRepoMock)
 	_, err := transactionUseCase.TopUp(dummyUserBalance.UserId, dummyUserBalance.Balance)
 	assert.Nil(suite.T(), err)
-} // This method has passed unit test
+}
 
 func (suite *TransactionUseCaseTestSuite) TestTopUp_Failed() {
 	var dummyUser = model.User{
@@ -260,7 +260,7 @@ func (suite *TransactionUseCaseTestSuite) TestTopUp_Failed() {
 	transactionUseCase := NewTransactionUseCase(suite.trxRepoMock, suite.usrRepoMock, suite.blcRepoMock, suite.rcvRepoMock)
 	_, err := transactionUseCase.TopUp(dummyUserBalance.UserId, dummyUserBalance.Balance)
 	assert.NotNil(suite.T(), err)
-} // This method has passed unit test
+}
 
 func (suite *TransactionUseCaseTestSuite) TestRequestMoney_Success() {
 	var dummyReceiver = model.TransactionRequest{
@@ -286,7 +286,7 @@ func (suite *TransactionUseCaseTestSuite) TestRequestMoney_Success() {
 	transactionUseCase := NewTransactionUseCase(suite.trxRepoMock, suite.usrRepoMock, suite.blcRepoMock, suite.rcvRepoMock)
 	_, err := transactionUseCase.RequestMoney(dummyReceiver)
 	assert.Nil(suite.T(), err)
-} // This method has not passed unit test
+}
 
 func (suite *TransactionUseCaseTestSuite) TestRequestMoney_Failed() {
 	var dummyReceiver = model.TransactionRequest{
@@ -312,7 +312,7 @@ func (suite *TransactionUseCaseTestSuite) TestRequestMoney_Failed() {
 	transactionUseCase := NewTransactionUseCase(suite.trxRepoMock, suite.usrRepoMock, suite.blcRepoMock, suite.rcvRepoMock)
 	_, err := transactionUseCase.RequestMoney(dummyReceiver)
 	assert.NotNil(suite.T(), err)
-} // This method has not passed unit test
+}
 
 func (suite *TransactionUseCaseTestSuite) TestGetBonus_Success() {
 	var dummyUser = model.User{
@@ -336,7 +336,7 @@ func (suite *TransactionUseCaseTestSuite) TestGetBonus_Success() {
 	transactionUseCase := NewTransactionUseCase(suite.trxRepoMock, suite.usrRepoMock, suite.blcRepoMock, suite.rcvRepoMock)
 	err := transactionUseCase.GetBonus(dummyUser.Id)
 	assert.Nil(suite.T(), err)
-} // This method has not passed unit test
+}
 
 func (suite *TransactionUseCaseTestSuite) TestGetBonus_Failed() {
 	var dummyUser = model.User{
@@ -360,7 +360,7 @@ func (suite *TransactionUseCaseTestSuite) TestGetBonus_Failed() {
 	transactionUseCase := NewTransactionUseCase(suite.trxRepoMock, suite.usrRepoMock, suite.blcRepoMock, suite.rcvRepoMock)
 	err := transactionUseCase.GetBonus(dummyUser.Id)
 	assert.NotNil(suite.T(), err)
-} // This method has passed unit test
+}
 
 type TransactionUseCaseTestSuite struct {
 	trxRepoMock *transactionRepoMock
